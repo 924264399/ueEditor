@@ -20,10 +20,17 @@ UCLASS() //UE 引擎强制要求的反射宏，写在 C++ 类的最上方。
 class SUPERMANGER_API Uquickassetactor : public UAssetActionUtility
 {
 	GENERATED_BODY() //函数反射宏，和UCLASS()配对使用，标记这是 UE 可识别的函数。
+
 	
 public:
 	UFUNCTION(CallInEditor) //CallInEditor允许在编辑器中直接调用这个函数； 还有诸如BlueprintCallable：蓝图可调用
+	void DuplicateAsset(int32 NumOfDuplicates);
+	
+	
+	
+	UFUNCTION(CallInEditor)
 	void TestFunction();
+	
 	
 };
  
