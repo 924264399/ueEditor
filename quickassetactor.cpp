@@ -5,6 +5,8 @@
 #include "DebugHeader.h"
 #include "EditorUtilityLibrary.h"
 #include "EditorAssetLibrary.h"
+#include "IO/IoStatus.h"
+//#include "Misc/MessageDialog.h"
 
 
 void Uquickassetactor::TestFunction()
@@ -19,7 +21,9 @@ void Uquickassetactor::DuplicateAsset(int32 NumOfDuplicates)
 {
 	if (NumOfDuplicates <= 0)
 	{
-		Print(TEXT("Please enter a VALID number"),FColor::Red);
+		ShowMsgDialog(EAppMsgType::Ok,TEXT("PLEASE ENTER A VALID NUMBER"));
+		return;
+		
 	}
 	
 	TArray<FAssetData> SelectedAssetDate   = UEditorUtilityLibrary::GetSelectedAssetData(); 
@@ -47,7 +51,10 @@ void Uquickassetactor::DuplicateAsset(int32 NumOfDuplicates)
 		
 	}
 	
-	PrintLog(TEXT("CopeOver")+FString::FromInt(Counter));	
 	
-	
+	if (Counter >0)
+	{
+		ShowNotifyInfo(TEXT("CopeOver"));
+	}
+	//PrintLog(TEXT("CopeOver")+FString::FromInt(Counter));	
 }
