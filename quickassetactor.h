@@ -34,6 +34,9 @@ public:
 	UFUNCTION(CallInEditor)
 	void AddPrefix();
 
+	UFUNCTION(CallInEditor)
+	void RemoveUnusedAssets();
+	
 
 private:
 	TMap<UClass*,FString> PrefixMap = 
@@ -42,7 +45,7 @@ private:
 		{UBlueprint::StaticClass(), TEXT("BP_")}   //StaticClass()是所有Object子类的静态函数，核心作用就是返回 UClass 元数据对象的指针（包含：类名、父类、属性、函数、接口）
 
 
-	}
+	};
 	
 };
  

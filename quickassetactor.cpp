@@ -7,6 +7,9 @@
 #include "EditorAssetLibrary.h"
 #include "IO/IoStatus.h"
 //#include "Misc/MessageDialog.h"
+#include "ObjectTools.h"
+#include "Kismet/KismetSystemLibrary.h"
+#include "Materials/MaterialInstanceConstant.h"
 
 
 void Uquickassetactor::TestFunction()
@@ -63,11 +66,11 @@ void Uquickassetactor::DuplicateAsset(int32 NumOfDuplicates)
 void Uquickassetactor::AddPrefix()
 {
 
-	TArray<UObject*> SelectedObjects = UEditorAssetLibrary::GetSelectedAssets();
+	TArray<UObject*> SelectedObjects = UEditorUtilityLibrary::GetSelectedAssets();
 	uint32 Counter = 0;
 
 
-	for (const UObject* SelectedObject:SelectedObjects) //对这个TArray数组进行遍历
+	for ( UObject* SelectedObject:SelectedObjects) //对这个TArray数组进行遍历
 	{
 		if(!SelectedObject) continue; //为什么会无效？？？ 
 
@@ -77,7 +80,7 @@ void Uquickassetactor::AddPrefix()
 
 		if (!PrefixFound || PrefixFound->IsEmpty()) //比如你的Tmap里还没写到的一些类 那么检索出来的PrefixFound就是空的
 		{
-			PrintLog(TEXT("Failed to find prefix for class") + SelectedObject->GetClass()->GetName(), FColor::Red);
+			PrintLog(TEXT("Failed to find prefix for class") + SelectedObject->GetClass()->GetName());
 			continue;
 		}
 
@@ -86,7 +89,18 @@ void Uquickassetactor::AddPrefix()
 		if (OldName.StartsWith(*PrefixFound))  //检测这个FString的前缀  如果和PrefixFound一致那就是已经添加了正确的前缀
 		{
 			Print(OldName + TEXT(" already has prefix addad"), FColor::Red);
+			continue;
 		}
+		
+		
+		if (SelectedObject->IsA<UMaterialInstanceConstant>())
+		{
+			OldName.RemoveFromStart(TEXT("M_"));
+			OldName.RemoveFromEnd(TEXT("_Inst"));
+			
+		}
+		
+		
 
 		const FString NewName =  *PrefixFound + OldName;
 
@@ -99,10 +113,55 @@ void Uquickassetactor::AddPrefix()
 
 	if (Counter >0)	
 	{
-
-
-	ShowNotifyInfo(TEXT("RenameOver"));}
-
+		
+	ShowNotifyInfo(TEXT("RenameOver"));
+		
 	}
 
+	
+
+}
+
+
+
+//这个逻辑比较简单，重点是FindPackageReferencersForAsset 这个方法可以输出资产的所有引用到一个TArray
+//那么如果这个TArray为0 那就是这个资产没有被任何引用喽~~  就可以进到UnusedAssets的TArray 最好被DeleteAssets自由函数删除
+
+void Uquickassetactor::RemoveUnusedAssets()
+{
+	
+	TArray<FAssetData> SelectedAssetDates   = UEditorUtilityLibrary::GetSelectedAssetData(); 
+	
+	TArray<FAssetData> UnusedAssets ;
+	
+	for (const FAssetData& SelectedAssetData:SelectedAssetDates)
+	{
+		
+		TArray<FString> AssetRefrencers = UEditorAssetLibrary:: FindPackageReferencersForAsset(SelectedAssetData.GetObjectPathString()); //找包级别的引用关系 它返回的是所有引用者的完整包路径字符串
+		
+		if (AssetRefrencers.Num() == 0)
+		{
+			UnusedAssets.Add(SelectedAssetData);
+			
+		}
+		
+	}
+	
+	if (UnusedAssets.Num() == 0)
+	{
+		
+		ShowMsgDialog(EAppMsgType::Ok,TEXT("No unused assets found"),false);
+		return;
+		
+	}
+	
+	const int32 NumOfUnusedDeleted = ObjectTools::DeleteAssets(UnusedAssets); //ObjectTools是一个name space  这是namespace + 自由函数  这样比设计成工具类更快
+	
+	if (NumOfUnusedDeleted == 0) return;
+	
+	
+	ShowNotifyInfo(TEXT("Success deleted"));
+	
+	
+	
 }
