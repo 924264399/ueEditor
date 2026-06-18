@@ -47,5 +47,8 @@ private:
 
 	};
 	
+	void FixUpRedirectors();
+	
+	
 };
  

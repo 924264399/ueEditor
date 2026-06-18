@@ -11,6 +11,10 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "Materials/MaterialInstanceConstant.h"
 
+#include "AssetRegistry/AssetRegistryModule.h"
+#include "AssetToolsModule.h"
+
+
 
 void Uquickassetactor::TestFunction()
 {
@@ -134,6 +138,8 @@ void Uquickassetactor::RemoveUnusedAssets()
 	
 	TArray<FAssetData> UnusedAssets ;
 	
+	// 这里还可以调用FixUpRedirectors函数
+	
 	for (const FAssetData& SelectedAssetData:SelectedAssetDates)
 	{
 		
@@ -162,6 +168,52 @@ void Uquickassetactor::RemoveUnusedAssets()
 	
 	ShowNotifyInfo(TEXT("Success deleted"));
 	
+	
+	
+}
+
+
+
+//更新重定向引用
+void Uquickassetactor::FixUpRedirectors()
+{
+	//// 存放待修复的资源重定向器的TArray
+	TArray<UObjectRedirector*> RedirectorsToFixArray; //UObjectRedirectors个类  就是UE里表示“资源重定向器”的类。 
+	
+	
+	//<FAssetRegistryModule> 是 C++ 模板参数   请按 FAssetRegistryModule 这个类型来加载/返回 AssetRegistry 模块。
+	
+	// 	模块管理器，加载名叫 AssetRegistry 的模块。返回他的模块类（入口类）FAssetRegistryModule给我
+	FAssetRegistryModule& AssetRegistryModule = 
+	FModuleManager::Get().LoadModuleChecked<FAssetRegistryModule>(TEXT("AssetRegistry")); //FModuleManager是模块管理器  Load加载资产注册表模板  后面可以用它查找项目里的资源、路径、重定向器
+																							//他管理诸如 core Engine 这些模块 具体的行为（加载 卸载  查找）
+																							//主要是因为 AssetRegistry 不是你当前类自带的功能，而是 UE 的一个独立模块
+																							//所以你必须加载进来先
+	
+																							//而AssetRegistry是 UE 编辑器维护的一张“资产索引表
+																							//他记录项目里有哪些资产的各种信息 名称 路径 依赖 引用 类型
+																							//为什么选中资产不需要 AssetRegistry？而找重定向引用需要？  因为后者范围很大啊~ 你需要遍历资产注册表，帮我找出所有类型是 UObjectRedirector 的资产。（你不知在哪 有几个）
+	
+	FARFilter Filter;  // 资产过滤器  是帅选资产的调节  是通用的吗？
+	Filter.bRecursivePaths = true;  //表示递归搜索路径。
+	Filter.PackagePaths.Emplace("/Game"); //把 /Game 这个路径加入筛选条件。  Game 代表项目的 Content 目录 
+	Filter.ClassNames.Emplace("ObjectRedirector");  //表示只查类型是 ObjectRedirector 的资产。  就是只找重定向器，不找贴图、材质、蓝图、StaticMesh 等等
+	
+	TArray<FAssetData>  OutRedirectors; //创建一个FAssetData数组  用来接受查到的资产
+	
+	AssetRegistryModule.Get().GetAssets(Filter, OutRedirectors);  //让资产注册表按照 Filter 的条件查资产。
+	
+	for(const FAssetData& RedirectorData:OutRedirectors)  //遍历每一个重定向器资产信息
+	{
+		if (UObjectRedirector* RedirectorToFix = Cast<UObjectRedirector>(RedirectorData.GetAsset()))//用GetAsset把他变成UObject*    然后把UObject* 转成 UObjectRedirector*（用这个Cast转换）
+			
+			RedirectorsToFixArray.Add(RedirectorToFix); //加到上面数组里面了
+	
+	}
+	
+	FAssetToolsModule& AssetToolsModule = FModuleManager::Get().LoadModuleChecked<FAssetToolsModule>(TEXT("AssetTools")); //和上面一样 只不过这次拿的是AssetTools模块
+	
+	AssetToolsModule.Get().FixupReferencers(RedirectorsToFixArray);
 	
 	
 }
