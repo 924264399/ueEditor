@@ -1,0 +1,57 @@
+// Copyright Epic Games, Inc. All Rights Reserved.
+
+using UnrealBuildTool;
+
+public class SuperManger : ModuleRules
+{
+	public SuperManger(ReadOnlyTargetRules Target) : base(Target)
+	{
+		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
+		
+		//手动添加头文件搜索路径，让编译器能找到指定目录下的头文件
+		//非 UE 模块的第三方库、或自己写的无模块头文件，不适合 UE 自带模块
+		PublicIncludePaths.AddRange(
+			new string[] {
+				// ... add public include paths required here ...
+			}
+			);
+				
+		
+		PrivateIncludePaths.AddRange(
+			new string[] {
+				// ... add other private include paths required here ...
+			}
+			);
+			
+		//添加公开模块依赖  我借了别人的工具箱，而且要把工具箱里的工具放在我的公开工具台上  
+		PublicDependencyModuleNames.AddRange(
+			new string[]
+			{
+				"Core","Blutility","EditorScriptingUtilities","UnrealED","AssetTools","ContentBrowser" //添加这个模块
+				// ... add other public dependencies that you statically link with here ...
+			}
+			);
+		
+		//添加私有模块
+		//我借了别人的工具箱，但只在自己的私人工作间里用，别人看不到，也不用管
+		//只在.cpp 文件里用其他模块的功能，public 头文件里没用到
+		PrivateDependencyModuleNames.AddRange(
+			new string[]
+			{
+				"CoreUObject",
+				"Engine",
+				"Slate",
+				"SlateCore"
+				// ... add private dependencies that you statically link with here ...	
+			}
+			);
+		
+		
+		DynamicallyLoadedModuleNames.AddRange(
+			new string[]
+			{
+				// ... add any modules that your module loads dynamically here ...
+			}
+			);
+	}
+}
