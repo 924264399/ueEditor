@@ -31,9 +31,11 @@ void FSuperMangerModule::ShutdownModule()
 	FModuleManager::LoadModuleChecked<FContentBrowserModule>(TEXT("ContentBrowser")); //LoadModuleChecked 这函数还有静态版本  所以不需要get就能用。。
 	
 	TArray<FContentBrowserMenuExtender_SelectedPaths>& ContentBrowserModuleExtenders = 
-	ContentBrowserModule.GetAllPathViewContextMenuExtenders();
+	ContentBrowserModule.GetAllPathViewContextMenuExtenders();  //返回的是委托数组 引用
 	
+	FContentBrowserMenuExtender_SelectedPaths CustomCBMenuDelegate; //我们自定义委托
 	
+	ContentBrowserModuleExtenders.Add(CustomCBMenuDelegate);  //加到上面的委托数组里。
 	
 	
 	}
