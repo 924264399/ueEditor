@@ -4,6 +4,9 @@
 
 #include "ContentBrowserModule.h"
 #include "ContentBrowserModule.h"
+#include "DebugHeader.h"
+#include "EditorAssetLibrary.h"
+#include "ObjectTools.h"
 
 #define LOCTEXT_NAMESPACE "FSuperMangerModule"
 
@@ -73,7 +76,7 @@ TSharedRef<FExtender> FSuperMangerModule::CustomCBMenuExtender(const TArray<FStr
 				//第四个参数是第二个绑定 + 第三个绑定的函数，即菜单项的详细信息和业务逻辑函数 这里直接用一个函数来写AddCBenuEntry
 														
 		
-		
+		FolderPathsSelectedPaths = SelectedPaths; //如果用户选择了文件夹 我们就把这个文件夹的数组转移到我们的变量  给后面的具体逻辑用
 		
 	}
 	
@@ -100,6 +103,64 @@ void FSuperMangerModule::AddCBMenuEntry( FMenuBuilder& MenuBuilder)
 
 void FSuperMangerModule::OnDeleteUnsuedAssetsButtonClicked()
 {
+	if (FolderPathsSelectedPaths.Num() > 1)
+	{
+		DebugHeader::ShowMsgDialog(EAppMsgType::Ok,TEXT("Please select only one folder!"));
+		
+		return;
+	}
+	
+	TArray<FString> AssetsPathNames = UEditorAssetLibrary::ListAssets(FolderPathsSelectedPaths[0]); //获取文件夹下的所有资产的路径  返回到一个TArray数组
+	
+	if (AssetsPathNames.Num() == 0) 
+	{
+		DebugHeader::ShowMsgDialog(EAppMsgType::Ok,TEXT("The folder is empty!"));
+		
+		return;
+	}
+	
+	
+	TArray<FAssetData> UNUsedAssetsDataAtrray;
+	
+	for (const FString& AssetPathName : AssetsPathNames)	
+	{
+		
+		//过滤敏感文件夹 就是放编译的这些
+		if (AssetPathName.Contains(TEXT("Developers")) || AssetPathName.Contains(TEXT("Collections")) )
+		{
+		
+			DebugHeader::ShowMsgDialog(EAppMsgType::Ok,TEXT("The folder is cant be delete!!"));
+			continue;
+		}
+		
+		if ( !UEditorAssetLibrary::DoesAssetExist(AssetPathName) ) continue;  //如果资源不存在 就跳过
+		
+		
+		TArray<FString> AssetPackageRefrencers = UEditorAssetLibrary:: FindPackageReferencersForAsset(AssetPathName); //获取引用这个资源的所有资源的路径
+		
+		
+		if (AssetPackageRefrencers.Num() == 0)
+		{
+			
+			const FAssetData UnusedAssetData = UEditorAssetLibrary::FindAssetData(AssetPathName); //获取这个资源的FAssetData
+			UNUsedAssetsDataAtrray.Add(UnusedAssetData); //添加到数组里
+			
+		}
+		
+		
+		
+	}
+	
+	if (UNUsedAssetsDataAtrray.Num() > 0)
+	{
+		ObjectTools::DeleteAssets(UNUsedAssetsDataAtrray); //删除资源	
+		
+	}
+	else
+	{
+		DebugHeader::ShowMsgDialog(EAppMsgType::Ok,TEXT("No unused assets found!"));
+		
+	}
 	
 }
 
