@@ -114,6 +114,16 @@ void FSuperMangerModule::AddCBMenuEntry( FMenuBuilder& MenuBuilder)
 			
 	);
 	
+	
+		MenuBuilder.AddMenuEntry
+	(
+		FText::FromString(("Advance Delete")),
+		FText::FromString(TEXT("List assets by specific condition in a tab for deleting")), //鼠标悬停在按钮上显示的
+		FSlateIcon(),  //自定义图标  目前是写的一个空的
+		FExecuteAction::CreateRaw(this,&FSuperMangerModule::OnAdvanceDeleteButtonClicked) //第三个绑定 业务函数
+				
+	);
+	
 }
 
 
@@ -249,6 +259,13 @@ void FSuperMangerModule::OnDeleteUnsuedAssetsButtonClicked()
 		DebugHeader::ShowMsgDialog(EAppMsgType::Ok,TEXT("No unused assets found!"));
 		
 	}
+	
+}
+
+void FSuperMangerModule::OnAdvanceDeleteButtonClicked()
+{
+	
+	DebugHeader::Print(TEXT("Advance Delete Button Clicked"),FColor::Green);
 	
 }
 

@@ -30,6 +30,8 @@ private:
 	
 	void OnDeleteUnsuedAssetsButtonClicked(); //业务函数  删除未使用的资产
 	
+	void OnAdvanceDeleteButtonClicked(); 
+	
 	void OnDeleteEmptyFolders();
 	
 	void FixUpRedirectors();	
