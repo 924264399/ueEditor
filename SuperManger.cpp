@@ -7,6 +7,9 @@
 #include "DebugHeader.h"
 #include "EditorAssetLibrary.h"
 #include "ObjectTools.h"
+#include "AssetToolsModule.h"
+
+#include "AssetRegistry/AssetRegistryModule.h"
 
 #define LOCTEXT_NAMESPACE "FSuperMangerModule"
 
@@ -56,7 +59,7 @@ void FSuperMangerModule::ShutdownModule()
 //FExtender类是 UE Slate 框架下专门用于 UI 菜单 / 工具栏扩展的普通 C++
 //  const TArray<FString>& SelectedPaths  这个参数拿到用户当前选中的路径列表，这是右键菜单扩展的核心数据输入。
 //下面这个是对接内容浏览器菜单扩展的唯一入口函数  执行3层绑定
-TSharedRef<FExtender> FSuperMangerModule::CustomCBMenuExtender(const TArray<FString>& SelectedPaths)    
+TSharedRef<FExtender> FSuperMangerModule::CustomCBMenuExtender(const TArray<FString>& SelectedPaths)    //这个TArray是自动传参的 不需要自己去定义 （在用户右键触发后这个TArray自动生成）
 {
 	TSharedRef<FExtender> MenuExtender (new FExtender); // new FExtender先new业务对象    控制块由TSharedRef内部去new和管理
 	
@@ -90,6 +93,8 @@ void FSuperMangerModule::AddCBMenuEntry( FMenuBuilder& MenuBuilder)
 {
 	//定义菜单项的具体内容
 	
+	//这个我们自己的数组是MenuBuilder去维护的
+	
 	MenuBuilder.AddMenuEntry
 	(
 		FText::FromString(("Delete Unused Assets")),
@@ -99,10 +104,89 @@ void FSuperMangerModule::AddCBMenuEntry( FMenuBuilder& MenuBuilder)
 		
 	);
 	
+	
+	MenuBuilder.AddMenuEntry
+	(
+		FText::FromString(("Delete Empty Folders")),
+		FText::FromString(TEXT("Safely delete all  empty folder")), //鼠标悬停在按钮上显示的
+		FSlateIcon(),  //自定义图标  目前是写的一个空的
+		FExecuteAction::CreateRaw(this,&FSuperMangerModule::OnDeleteEmptyFolders) //第三个绑定 业务函数
+			
+	);
+	
 }
+
+
+void FSuperMangerModule::OnDeleteEmptyFolders()
+{
+	FixUpRedirectors();
+	
+	TArray<FString> FolferPathsArray = UEditorAssetLibrary::ListAssets(FolderPathsSelectedPaths[0],true,true); //获取文件夹下的所有资产的路径  返回到一个TArray数组
+	
+	FString EmptyFolderPathsNames;
+	TArray<FString> EmptyFolderPathsArray; //空文件夹的列表
+	
+	for (const FString& FolderPath : FolferPathsArray)
+	{
+		if (FolderPath.Contains(TEXT("Developers")) || FolderPath.Contains(TEXT("Collections")) )  //不允许删除额的文件夹
+		{
+		
+			DebugHeader::ShowMsgDialog(EAppMsgType::Ok,TEXT("The folder is cant be delete!!"));
+			continue;
+		}
+		
+		
+		if (!UEditorAssetLibrary::DoesDirectoryExist(FolderPath)) continue;  //如果目录不存在 就说明是资源 而不是目录？  这里不理解
+		
+		if (!UEditorAssetLibrary::DoesDirectoryHaveAssets(FolderPath)) //如果目录下没有资产 就说明是空目录
+		{
+			EmptyFolderPathsNames.Append(FolderPath);
+			EmptyFolderPathsNames.Append( TEXT("\n"));
+			
+			EmptyFolderPathsArray.Add(FolderPath); //数组添加
+			
+		}
+		
+	};
+	
+	if (EmptyFolderPathsArray.Num() == 0)
+	{
+		DebugHeader::ShowMsgDialog(EAppMsgType::Ok,TEXT("No empty folders found!"));
+		return;
+		
+	}
+	
+	EAppReturnType::Type ConfimResult = DebugHeader::ShowMsgDialog(EAppMsgType::OkCancel, TEXT("The following empty folders will be deleted:\n") + EmptyFolderPathsNames,false); // 询问用户是否删除
+	
+	
+	if (ConfimResult == EAppReturnType::Ok)
+	{
+		for (const FString& EmptyFolderPath : EmptyFolderPathsArray)
+		{
+			UEditorAssetLibrary::DeleteDirectory(EmptyFolderPath); //删除空文件夹
+		}
+		
+		DebugHeader::ShowNotifyInfo(TEXT("Empty folders deleted successfully!"));
+		
+	}
+	else
+	{
+		DebugHeader::ShowNotifyInfo(TEXT("Empty folder deletion canceled."));
+	}
+	
+	
+}
+
+
+
+
+
+
 
 void FSuperMangerModule::OnDeleteUnsuedAssetsButtonClicked()
 {
+	
+	
 	if (FolderPathsSelectedPaths.Num() > 1)
 	{
 		DebugHeader::ShowMsgDialog(EAppMsgType::Ok,TEXT("Please select only one folder!"));
@@ -119,6 +203,9 @@ void FSuperMangerModule::OnDeleteUnsuedAssetsButtonClicked()
 		return;
 	}
 	
+	
+	//在这里先修复重定向器 我可以先获取资产注册表 然后筛选。。。
+	FixUpRedirectors();
 	
 	TArray<FAssetData> UNUsedAssetsDataAtrray;
 	
@@ -150,6 +237,7 @@ void FSuperMangerModule::OnDeleteUnsuedAssetsButtonClicked()
 		
 		
 	}
+		
 	
 	if (UNUsedAssetsDataAtrray.Num() > 0)
 	{
@@ -161,6 +249,42 @@ void FSuperMangerModule::OnDeleteUnsuedAssetsButtonClicked()
 		DebugHeader::ShowMsgDialog(EAppMsgType::Ok,TEXT("No unused assets found!"));
 		
 	}
+	
+}
+
+
+void FSuperMangerModule::FixUpRedirectors()
+{
+	
+	//// 存放待修复的资源重定向器的TArray
+	TArray<UObjectRedirector*> RedirectorsToFixArray; //UObjectRedirectors个类  就是UE里表示“资源重定向器”的类。
+	
+	
+	FAssetRegistryModule& AssetRegistryModule = 
+	FModuleManager::Get().LoadModuleChecked<FAssetRegistryModule>(TEXT("AssetRegistry")); //加载资产注册表模板
+	
+	
+	FARFilter Filter;  // 资产过滤器  是帅选资产的调节  是通用的吗？
+	Filter.bRecursivePaths = true;  //表示递归搜索路径。
+	Filter.PackagePaths.Emplace("/Game"); //把 /Game 这个路径加入筛选条件。  Game 代表项目的 Content 目录   这里依旧是全部文件夹的 比较保险
+	Filter.ClassNames.Emplace("ObjectRedirector");  //表示只查类型是 ObjectRedirector 的资产。  就是只找重定向器，不找贴图、材质、蓝图、StaticMesh 等等
+	
+	TArray<FAssetData>  OutRedirectors; //创建一个FAssetData数组  用来接受查到的资产
+	AssetRegistryModule.Get().GetAssets(Filter, OutRedirectors);  //让资产注册表按照 Filter 的条件查资产。
+	
+	for(const FAssetData& RedirectorData:OutRedirectors)  //遍历每一个重定向器资产信息
+	{
+		if (UObjectRedirector* RedirectorToFix = Cast<UObjectRedirector>(RedirectorData.GetAsset()))//用GetAsset把他变成UObject*    然后把UObject* 转成 UObjectRedirector*（用这个Cast转换）
+			
+			RedirectorsToFixArray.Add(RedirectorToFix); //加到上面数组里面了
+	
+	}
+	
+	FAssetToolsModule& AssetToolsModule = FModuleManager::Get().LoadModuleChecked<FAssetToolsModule>(TEXT("AssetTools")); //和上面一样 只不过这次拿的是AssetTools模块
+	
+	AssetToolsModule.Get().FixupReferencers(RedirectorsToFixArray);
+	
+	
 	
 }
 
