@@ -18,6 +18,8 @@ void FSuperMangerModule::StartupModule()
 	
 	InitCBMenuExtention();
 	
+	RegisterAdvanceDeletionTab();
+	
 	// This code will execute after your module is loaded into memory; the exact timing is specified in the .uplugin file per-module 此函数将在模块加载到内存后执行
 }
 
@@ -264,8 +266,8 @@ void FSuperMangerModule::OnDeleteUnsuedAssetsButtonClicked()
 
 void FSuperMangerModule::OnAdvanceDeleteButtonClicked()
 {
+	FGlobalTabmanager::Get()->TryInvokeTab(FName("AdvanceDeletionTab")); //打开我们自定义的标签页
 	
-	DebugHeader::Print(TEXT("Advance Delete Button Clicked"),FColor::Green);
 	
 }
 
@@ -305,7 +307,39 @@ void FSuperMangerModule::FixUpRedirectors()
 	
 }
 
+
 #pragma endregion
+
+
+
+
+
+#pragma region CustomEditorTab
+
+    //通过这个函数可以创建独立窗口  标签页
+	//此函数必须在StartupModule注册
+	void FSuperMangerModule::RegisterAdvanceDeletionTab()
+	{
+		FGlobalTabmanager::Get()->RegisterNomadTabSpawner(FName("AdvanceDeletionTab"), 
+			FOnSpawnTab::CreateRaw(this, &FSuperMangerModule::OnSpawnAdvanceDeletionTab))
+			.SetDisplayName(FText::FromString(TEXT("Advance Deletion")));
+														//这就是创建slate的独立窗口的最重要的api  其中的 tabID 你知道的
+														//FGlobalTabmanager::Get() 返回的是一个智能指针
+														//RegisterNomadTabSpawner （ tabid ， 创建一个委托）
+	
+	}
+
+	TSharedRef<SDockTab> FSuperMangerModule::OnSpawnAdvanceDeletionTab(const FSpawnTabArgs& TabArgs )
+	{
+	
+		return  SNew(SDockTab).TabRole(NomadTab);
+	
+		//return TSharedRef<SDockTab>(); //TSharedRef必须指向有效对象 还需要一个sdog选项卡
+	
+	}
+
+#pragma endregion
+	
 
 
 
