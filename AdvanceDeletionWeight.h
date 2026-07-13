@@ -9,6 +9,9 @@ class ASdvanceDeletionTab : public SCompoundWidget   //是 Slate 所有 "复合�
 	
 	SLATE_BEGIN_ARGS(ASdvanceDeletionTab){ }
 
+
+	SLATE_ARGUMENT(FString, TestString)  //这个宏是声明参数的，，FString 是参数类型,TabName 是参数名
+
 		
 	SLATE_END_ARGS()   //这是一对宏  中间夹着的是参数声明，它们合起来会自动生成一个叫 FArguments 的内部结构体   简单说：这对宏 = 定义这个控件支持哪些外部参数
                         // 编译器看就是 struct FArguments{     }

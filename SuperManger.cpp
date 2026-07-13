@@ -8,8 +8,10 @@
 #include "EditorAssetLibrary.h"
 #include "ObjectTools.h"
 #include "AssetToolsModule.h"
+#include "SAdvancedPreviewDetailsTab.h"
 
 #include "AssetRegistry/AssetRegistryModule.h"
+#include "SlateWights/AdvanceDeletionWeight.h"
 
 #define LOCTEXT_NAMESPACE "FSuperMangerModule"
 
@@ -332,7 +334,11 @@ void FSuperMangerModule::FixUpRedirectors()
 	TSharedRef<SDockTab> FSuperMangerModule::OnSpawnAdvanceDeletionTab(const FSpawnTabArgs& TabArgs )
 	{
 	
-		return  SNew(SDockTab).TabRole(NomadTab);
+		return  SNew(SDockTab).TabRole(NomadTab)
+		[
+			SNew(ASdvanceDeletionTab) //这里面的是类名 就是我们自定义的Slate控件类  
+			.TestString(TEXT("Hello World"))  //这个TestString是类里面 SLATE_ARGUMENT的 参数
+		]; //方括号代表一个槽位 就是和编辑器控件一样的槽位
 	
 		//return TSharedRef<SDockTab>(); //TSharedRef必须指向有效对象 还需要一个sdog选项卡
 	
