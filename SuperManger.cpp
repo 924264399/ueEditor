@@ -337,10 +337,43 @@ void FSuperMangerModule::FixUpRedirectors()
 		return  SNew(SDockTab).TabRole(NomadTab)
 		[
 			SNew(ASdvanceDeletionTab) //这里面的是类名 就是我们自定义的Slate控件类  
-			.TestString(TEXT("Hello World"))  //这个TestString是类里面 SLATE_ARGUMENT的 参数
+			.AssetsDataArray(GetAllAssetsDataUnderSelectedFolder())  //这个TestString是类里面 SLATE_ARGUMENT的 参数
 		]; //方括号代表一个槽位 就是和编辑器控件一样的槽位
 	
 		//return TSharedRef<SDockTab>(); //TSharedRef必须指向有效对象 还需要一个sdog选项卡
+	
+	}
+
+	TArray<TSharedPtr<FAssetData>> FSuperMangerModule::GetAllAssetsDataUnderSelectedFolder()
+	{
+	
+		TArray<TSharedPtr<FAssetData>> AvailableAssetsData;
+	
+		TArray<FString> FolferPathsArray = UEditorAssetLibrary::ListAssets(FolderPathsSelectedPaths[0],true,true); //获取文件夹下的所有资产的路径  返回到一个TArray数组 
+		
+		for (const FString& FolferPath : FolferPathsArray)
+		{
+			
+			if (FolferPath.Contains(TEXT("Developers")) || FolferPath.Contains(TEXT("Collections")) )  //不允许删除额的文件夹
+			{
+				
+				continue;
+			}
+		
+		
+			if (!UEditorAssetLibrary::DoesDirectoryExist(FolferPath)) continue; 
+			
+			const FAssetData Data = UEditorAssetLibrary::FindAssetData(FolferPath);
+			
+			
+			AvailableAssetsData.Add(MakeShared<FAssetData>(Data)); //添加到数组里 但是Data先转化为指针
+			
+			
+			
+		}
+	
+		return AvailableAssetsData;
+	
 	
 	}
 
