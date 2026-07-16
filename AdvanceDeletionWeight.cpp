@@ -11,7 +11,7 @@ void ASdvanceDeletionTab::Construct(const FArguments& InArgs)
 	
 	
 	
-	AssetsDataArray = InArgs._AssetsDataArray;  //把参数传入到成员变量里  
+	StoredAssetsData = InArgs.AssetsDataToStore;  //把参数传入到成员变量里  
 	
 	
 	
@@ -56,6 +56,17 @@ void ASdvanceDeletionTab::Construct(const FArguments& InArgs)
 		[
 
 			SNew( SScrollBox)  // 滚动框控件
+
+
+			+ SScrollBox::Slot() //给滚动框增加一个槽位
+			[
+				SNew(SListView<TSharedPtr<FAssetData>>)  //列表控件  里面是我们传入的资产数据类型
+				.ItemHeight(24)  //设置每一行的高度
+				.ListItemsSource(&StoredAssetsData)  //设置listview的  列表数据源  
+				.OnGenerateRow(this,&ASdvanceDeletionTab::OnGenerateRowForList)  //设置生成行的回调函数  就是我们自己定义的函数  这个函数会在列表控件需要生成行的时候被调用
+				
+			 	
+			]
 			
 		]
 		
@@ -71,5 +82,39 @@ void ASdvanceDeletionTab::Construct(const FArguments& InArgs)
 	
 	];
 	
+	
+}
+
+
+
+
+// 这里的AssetDataToDisplay 是怎么和StoredAssetsData 关联的？  答案是在.ListItemsSource(&StoredAssetsData)这一步  是自动关联的
+//如果 StoredAssetsData 里有 10 个资产，OnGenerateRowForList 大概会被调用 10 次，每次的 AssetDataToDisplay 都是不一样的数组元素。
+TSharedRef<ITableRow> ASdvanceDeletionTab::OnGenerateRowForList(TSharedPtr<FAssetData> AssetDataToDisplay,
+	const TSharedRef<STableViewBase>& OwnerTable)
+{
+	
+	const FString DisplayAssetName = AssetDataToDisplay->AssetName.ToString();
+
+	TSharedRef<STableRow<TSharedPtr<FAssetData>>> ListViewRowWidget =  
+	SNew(STableRow<TSharedPtr<FAssetData>>, OwnerTable)
+		[
+
+
+			SNew(STextBlock)
+			.Text(FText::FromString(DisplayAssetName))
+
+
+			
+		];
+	
+	
+	return ListViewRowWidget;
+	
+	
+	//STableRow<TSharedPtr<FAssetData>> 是一个具体的 Slate 行控件    它可以被当成 ITableRow 使用
+	//ITableRow = “一行控件应该具备的接口/规矩”
+	//STableRow = “UE 已经写好的标准行控件实现”
+		
 	
 }

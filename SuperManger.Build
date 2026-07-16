@@ -27,7 +27,7 @@ public class SuperManger : ModuleRules
 		PublicDependencyModuleNames.AddRange(
 			new string[]
 			{
-				"Core","Blutility","EditorScriptingUtilities","UnrealED","AssetTools","ContentBrowser" //添加这个模块
+				"Core","Blutility","EditorScriptingUtilities","UnrealED","AssetTools","ContentBrowser","InputCore" //添加这个模块
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);
