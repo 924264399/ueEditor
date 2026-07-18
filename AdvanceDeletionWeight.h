@@ -27,7 +27,18 @@ public:
 
 	
 private:
-	TArray<TSharedPtr<FAssetData>> StoredAssetsData;  //这个是我们上面声明的参数类型  这个是我们自己定义的成员变量  用来存储传入的参数数
+	TArray<TSharedPtr<FAssetData>> StoredAssetsData;  //这个是我们上面声明的参数类型    用来存储传入的参数数
 	
-	TSharedRef<ITableRow> OnGenerateRowForList(TSharedPtr<FAssetData> AssetDataToDisplay,   const TSharedRef<STableViewBase>& OwnerTable);  //这个是我们自己定义的成员函数  用来生成列表行的 
+	TSharedRef<ITableRow> OnGenerateRowForList(TSharedPtr<FAssetData> AssetDataToDisplay,   const TSharedRef<STableViewBase>& OwnerTable);  //  用来生成列表行的 
+	
+	TSharedRef<SCheckBox> ConstructCheckBox(const TSharedPtr<FAssetData> AssetDataToDisplay);  //  用来生成复选框的
+	
+	void OnCheckBoxStateChanges(ECheckBoxState NewState, TSharedPtr<FAssetData> AssetData);  //复选框状态改变的回调函数
+	
+	TSharedRef<STextBlock> ConstructTextForRowWidget(const FString& TextContent,const FSlateFontInfo& FontInfo);  //  用来生成文本控件的
+	
+	
+	FSlateFontInfo GetEmboseedTestFont() const { return FCoreStyle::Get().GetFontStyle(FName("EmbossedText")); };    //这是字体样式  
+	
+	
 };

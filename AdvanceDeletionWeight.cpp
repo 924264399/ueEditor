@@ -2,7 +2,12 @@
 
 
 #include "SlateWights/AdvanceDeletionWeight.h"
+
+#include "DebugHeader.h"
 #include "SlateBasics.h"
+#include "Components/Widget.h"
+#include "DynamicMesh/DynamicMesh3.h"
+#include "DebugHeader.h"
 
 
 void ASdvanceDeletionTab::Construct(const FArguments& InArgs)
@@ -52,7 +57,7 @@ void ASdvanceDeletionTab::Construct(const FArguments& InArgs)
 		
 		//第三个槽位是资产列表
 		+ SVerticalBox::Slot()
-		.AutoHeight()
+		.VAlign(VAlign_Fill)//垂直对齐-让槽位里的控件在垂直方向填满这个 Slot 给它的高度
 		[
 
 			SNew( SScrollBox)  // 滚动框控件
@@ -93,18 +98,59 @@ void ASdvanceDeletionTab::Construct(const FArguments& InArgs)
 TSharedRef<ITableRow> ASdvanceDeletionTab::OnGenerateRowForList(TSharedPtr<FAssetData> AssetDataToDisplay,
 	const TSharedRef<STableViewBase>& OwnerTable)
 {
+	if (!AssetDataToDisplay.IsValid()) return SNew(STableRow<TSharedPtr<FAssetData>>, OwnerTable);  //如果传入的资产数据无效 就返回一个空的行控件
 	
-	const FString DisplayAssetName = AssetDataToDisplay->AssetName.ToString();
+	const FString DisplayAssetClassName = AssetDataToDisplay->AssetClass.ToString();
+	const FString DisplayAssetName = AssetDataToDisplay->AssetName.ToString(); //资源类名
+	
+	FSlateFontInfo AssetClassNameFont = GetEmboseedTestFont();  //设置类名字体样式
+	AssetClassNameFont.Size = 10;  //设置字体大小
+	
+	FSlateFontInfo AssetNameFont = GetEmboseedTestFont();  //设置资产名称字体样式
+	AssetNameFont.Size = 10;  //设置字体大小
 
 	TSharedRef<STableRow<TSharedPtr<FAssetData>>> ListViewRowWidget =  
 	SNew(STableRow<TSharedPtr<FAssetData>>, OwnerTable)
 		[
 
+			SNew(SHorizontalBox)
 
-			SNew(STextBlock)
-			.Text(FText::FromString(DisplayAssetName))
+			//第一个槽位是给复选框 用复选框判断 该资源是否被选中
+			+SHorizontalBox::Slot()
+			.HAlign(HAlign_Left)// 这个槽位左对其  保证复选框靠左
+			.VAlign(VAlign_Center)// 这个槽位垂直居中  保证复选框在中间
+			.FillWidth(.05f)//这个槽占的空间
+			[
 
+				ConstructCheckBox(AssetDataToDisplay)  //  用来生成复选框的逻辑 这样更具可读性
+				
+			]
+			
 
+			//第二个槽位用于显示资源名称 资源类名
+			+SHorizontalBox::Slot()
+			.HAlign(HAlign_Center)// 这个槽位水平居中  
+			.VAlign(VAlign_Fill)// 这个槽位垂直填充  保证资源名称在中间
+			.FillWidth(.2f)
+			[
+
+				ConstructTextForRowWidget(DisplayAssetClassName,AssetClassNameFont)  //  用来生成文本控件的逻辑
+
+				
+			]
+			
+			//第三个位置显示资源名称
+
+			+ SHorizontalBox::Slot()
+			[
+	
+				ConstructTextForRowWidget(DisplayAssetName,AssetNameFont)  //  用来生成文本控件的逻辑
+				
+			]
+			
+			
+
+			//第四个位置放一个按钮（点击这个按钮直接删除资源）
 			
 		];
 	
@@ -117,4 +163,60 @@ TSharedRef<ITableRow> ASdvanceDeletionTab::OnGenerateRowForList(TSharedPtr<FAsse
 	//STableRow = “UE 已经写好的标准行控件实现”
 		
 	
+}
+
+TSharedRef<SCheckBox> ASdvanceDeletionTab::ConstructCheckBox(const TSharedPtr<FAssetData> AssetDataToDisplay)
+{
+	
+	
+	TSharedRef<SCheckBox> ConstructedCheckBox  =
+	 SNew(SCheckBox)
+	.Type(ESlateCheckBoxType::CheckBox) //  这里CheckBox的类型是复选框  还有切换按钮的类型
+	.OnCheckStateChanged(this, &ASdvanceDeletionTab::OnCheckBoxStateChanges,AssetDataToDisplay) //依然绑定回调函数
+	.Visibility(EVisibility::Visible); //可见性是可见
+	
+	return ConstructedCheckBox;
+	
+	
+}
+
+void ASdvanceDeletionTab::OnCheckBoxStateChanges(ECheckBoxState NewState, TSharedPtr<FAssetData> AssetData)
+{
+	
+	switch (NewState)  //NewState 是枚举
+	{
+		case ECheckBoxState::Checked: //选中
+		DebugHeader::Print(AssetData->AssetName.ToString(),FColor::Green);
+			break;
+		
+		case ECheckBoxState::Unchecked: //未选中
+		DebugHeader::Print(AssetData->AssetName.ToString(),FColor::Red);
+			break;
+		
+		
+		case ECheckBoxState::Undetermined: //不确定
+			break;
+		
+		default:
+			break;
+		
+		
+	}
+	
+	
+	
+}
+
+
+//文本框控件 生成函数
+TSharedRef<STextBlock> ASdvanceDeletionTab::ConstructTextForRowWidget(const FString& TextContent,
+	const FSlateFontInfo& FontInfo)
+{
+	TSharedRef<STextBlock> ConstructedTextBlock =
+		SNew(STextBlock)
+		.Text(FText::FromString(TextContent))
+		.Font(FontInfo)
+		.ColorAndOpacity(FColor::White);
+	
+	return ConstructedTextBlock;
 }
