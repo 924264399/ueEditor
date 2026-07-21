@@ -37,6 +37,11 @@ private:
 	
 	TSharedRef<STextBlock> ConstructTextForRowWidget(const FString& TextContent,const FSlateFontInfo& FontInfo);  //  用来生成文本控件的
 	
+	TSharedRef<SButton> ConstructButtonForRowWidget(const TSharedPtr<FAssetData> AssetDataToDisplay); //按钮控件
+	
+	FReply OnDeleteButttonClicked(TSharedPtr<FAssetData> AssetDataToDisplayData);
+	
+	
 	
 	FSlateFontInfo GetEmboseedTestFont() const { return FCoreStyle::Get().GetFontStyle(FName("EmbossedText")); };    //这是字体样式  
 	

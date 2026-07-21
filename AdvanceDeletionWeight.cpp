@@ -111,6 +111,7 @@ TSharedRef<ITableRow> ASdvanceDeletionTab::OnGenerateRowForList(TSharedPtr<FAsse
 
 	TSharedRef<STableRow<TSharedPtr<FAssetData>>> ListViewRowWidget =  
 	SNew(STableRow<TSharedPtr<FAssetData>>, OwnerTable)
+		.Padding(FMargin(5.f))   //内边距  相对和每行的边界有0.5的距离
 		[
 
 			SNew(SHorizontalBox)
@@ -131,7 +132,7 @@ TSharedRef<ITableRow> ASdvanceDeletionTab::OnGenerateRowForList(TSharedPtr<FAsse
 			+SHorizontalBox::Slot()
 			.HAlign(HAlign_Center)// 这个槽位水平居中  
 			.VAlign(VAlign_Fill)// 这个槽位垂直填充  保证资源名称在中间
-			.FillWidth(.2f)
+			.FillWidth(.5f)
 			[
 
 				ConstructTextForRowWidget(DisplayAssetClassName,AssetClassNameFont)  //  用来生成文本控件的逻辑
@@ -142,6 +143,8 @@ TSharedRef<ITableRow> ASdvanceDeletionTab::OnGenerateRowForList(TSharedPtr<FAsse
 			//第三个位置显示资源名称
 
 			+ SHorizontalBox::Slot()
+			.HAlign(HAlign_Center) 
+			.VAlign(VAlign_Fill)
 			[
 	
 				ConstructTextForRowWidget(DisplayAssetName,AssetNameFont)  //  用来生成文本控件的逻辑
@@ -151,6 +154,17 @@ TSharedRef<ITableRow> ASdvanceDeletionTab::OnGenerateRowForList(TSharedPtr<FAsse
 			
 
 			//第四个位置放一个按钮（点击这个按钮直接删除资源）
+			+ SHorizontalBox::Slot()
+			.HAlign(HAlign_Center) //右靠边
+			.VAlign(VAlign_Fill)
+			[
+				
+				ConstructButtonForRowWidget(AssetDataToDisplay)  //  用来生成按钮控件的逻辑
+
+				
+				
+			]
+			
 			
 		];
 	
@@ -219,4 +233,33 @@ TSharedRef<STextBlock> ASdvanceDeletionTab::ConstructTextForRowWidget(const FStr
 		.ColorAndOpacity(FColor::White);
 	
 	return ConstructedTextBlock;
+}
+
+
+
+
+//按钮
+TSharedRef<SButton> ASdvanceDeletionTab::ConstructButtonForRowWidget(const TSharedPtr<FAssetData> AssetDataToDisplay)
+{
+	
+	TSharedRef<SButton> ConstructedButton =
+	SNew(SButton)
+	.Text(FText::FromString(TEXT("Delete"))) // 按钮的文本
+	.OnClicked(this, &ASdvanceDeletionTab::OnDeleteButttonClicked, AssetDataToDisplay); // 按钮点击事件绑定
+
+	
+	return ConstructedButton;
+}
+
+
+//回调函数 用于按钮的
+FReply ASdvanceDeletionTab::OnDeleteButttonClicked(TSharedPtr<FAssetData> AssetDataToDisplayData)
+{
+	
+	
+	DebugHeader::Print(AssetDataToDisplayData->AssetName.ToString() + TEXT(" is clkicked"),FColor::Green);
+	
+	
+	return FReply::Handled();
+	
 }
