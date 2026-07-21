@@ -49,7 +49,24 @@ private:
 	
 		TSharedRef<SDockTab> OnSpawnAdvanceDeletionTab(const FSpawnTabArgs& TabArgs); //这的函数的 参数和返回类型都是基于FOnSpawnTab::CreateRaw 这个委托所需要的
 	
+		TArray<TSharedPtr<FAssetData>> GetAllAssetsDataUnderSelectedFolder();
+	
+	
+	
 	#pragma endregion
+	
+	
+	
+public:	
+	
+	#pragma region ProccessDataForAdvanceDeletionTab
+	
+		bool DeleteSingleAssetsForAssetList(const FAssetData& AssetDataToDelete);
+	
+	
+	#pragma endregion
+	
+	
 	
 	
 };

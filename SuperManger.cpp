@@ -316,6 +316,7 @@ void FSuperMangerModule::FixUpRedirectors()
 
 
 
+
 #pragma region CustomEditorTab
 
     //通过这个函数可以创建独立窗口  标签页
@@ -337,7 +338,7 @@ void FSuperMangerModule::FixUpRedirectors()
 		return  SNew(SDockTab).TabRole(NomadTab)
 		[
 			SNew(ASdvanceDeletionTab) //这里面的是类名 就是我们自定义的Slate控件类  
-			.AssetsDataArray(GetAllAssetsDataUnderSelectedFolder())  //这个TestString是类里面 SLATE_ARGUMENT的 参数
+			.AssetsDataToStore(GetAllAssetsDataUnderSelectedFolder())  //这个TestString是类里面 SLATE_ARGUMENT的 参数
 		]; //方括号代表一个槽位 就是和编辑器控件一样的槽位
 	
 		//return TSharedRef<SDockTab>(); //TSharedRef必须指向有效对象 还需要一个sdog选项卡
@@ -361,9 +362,14 @@ void FSuperMangerModule::FixUpRedirectors()
 			}
 		
 		
-			if (!UEditorAssetLibrary::DoesDirectoryExist(FolferPath)) continue; 
+			//if (!UEditorAssetLibrary::DoesDirectoryExist(FolferPath)) continue; 
 			
 			const FAssetData Data = UEditorAssetLibrary::FindAssetData(FolferPath);
+			
+			if (!Data.IsValid())
+			{
+				continue;
+			}
 			
 			
 			AvailableAssetsData.Add(MakeShared<FAssetData>(Data)); //添加到数组里 但是Data先转化为指针
@@ -377,8 +383,41 @@ void FSuperMangerModule::FixUpRedirectors()
 	
 	}
 
+
+
+
 #pragma endregion
+
+
+
+
+
+#pragma region ProccessDataForAdvanceDeletionTab
+
+	bool FSuperMangerModule::DeleteSingleAssetsForAssetList(const FAssetData& AssetDataToDelete)
+	{
+		TArray<FAssetData> AssetDataToDeleteArray;
+		AssetDataToDeleteArray.Add(AssetDataToDelete);
 	
+		int32 DeleteNum = ObjectTools::DeleteAssets(AssetDataToDeleteArray);
+	
+	
+		if (DeleteNum == 0)
+		{
+			return false;
+			
+		}
+		else
+		{
+			return true;
+		}
+	
+	
+	}
+
+
+#pragma endregion
+
 
 
 

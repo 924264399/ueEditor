@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ // Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "SlateWights/AdvanceDeletionWeight.h"
@@ -8,6 +8,7 @@
 #include "Components/Widget.h"
 #include "DynamicMesh/DynamicMesh3.h"
 #include "DebugHeader.h"
+#include "SuperManger.h"
 
 
 void ASdvanceDeletionTab::Construct(const FArguments& InArgs)
@@ -16,7 +17,7 @@ void ASdvanceDeletionTab::Construct(const FArguments& InArgs)
 	
 	
 	
-	StoredAssetsData = InArgs.AssetsDataToStore;  //把参数传入到成员变量里  
+	StoredAssetsData = InArgs._AssetsDataToStore;  //把参数传入到成员变量里  
 	
 	
 	
@@ -100,7 +101,7 @@ TSharedRef<ITableRow> ASdvanceDeletionTab::OnGenerateRowForList(TSharedPtr<FAsse
 {
 	if (!AssetDataToDisplay.IsValid()) return SNew(STableRow<TSharedPtr<FAssetData>>, OwnerTable);  //如果传入的资产数据无效 就返回一个空的行控件
 	
-	const FString DisplayAssetClassName = AssetDataToDisplay->AssetClass.ToString();
+	const FString DisplayAssetClassName = AssetDataToDisplay->AssetClassPath.GetAssetName().ToString();
 	const FString DisplayAssetName = AssetDataToDisplay->AssetName.ToString(); //资源类名
 	
 	FSlateFontInfo AssetClassNameFont = GetEmboseedTestFont();  //设置类名字体样式
@@ -257,7 +258,16 @@ FReply ASdvanceDeletionTab::OnDeleteButttonClicked(TSharedPtr<FAssetData> AssetD
 {
 	
 	
-	DebugHeader::Print(AssetDataToDisplayData->AssetName.ToString() + TEXT(" is clkicked"),FColor::Green);
+	FSuperMangerModule& SuperManagerModule = FModuleManager::LoadModuleChecked<FSuperMangerModule>( TEXT("SuperManger") );
+	
+	const bool bAssetDeleted =  SuperManagerModule.DeleteSingleAssetsForAssetList(*AssetDataToDisplayData.Get()); 
+	
+	//刷新列表
+	if (bAssetDeleted == false)
+	{
+		//刷新列表
+	}
+	
 	
 	
 	return FReply::Handled();
