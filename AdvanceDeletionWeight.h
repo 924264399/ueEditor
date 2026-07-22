@@ -29,6 +29,12 @@ public:
 private:
 	TArray<TSharedPtr<FAssetData>> StoredAssetsData;  //这个是我们上面声明的参数类型    用来存储传入的参数数
 	
+	TSharedRef<SListView<TSharedPtr<FAssetData>>> ConstructAssetListView();
+	TSharedPtr<SListView<TSharedPtr<FAssetData>>>  ConstructedAssetListView;
+	
+	void RefreshAssetListView();
+	
+	
 	TSharedRef<ITableRow> OnGenerateRowForList(TSharedPtr<FAssetData> AssetDataToDisplay,   const TSharedRef<STableViewBase>& OwnerTable);  //  用来生成列表行的 
 	
 	TSharedRef<SCheckBox> ConstructCheckBox(const TSharedPtr<FAssetData> AssetDataToDisplay);  //  用来生成复选框的

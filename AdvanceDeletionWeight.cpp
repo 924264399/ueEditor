@@ -1,4 +1,4 @@
- // Fill out your copyright notice in the Description page of Project Settings.
+// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "SlateWights/AdvanceDeletionWeight.h"
@@ -66,11 +66,7 @@ void ASdvanceDeletionTab::Construct(const FArguments& InArgs)
 
 			+ SScrollBox::Slot() //给滚动框增加一个槽位
 			[
-				SNew(SListView<TSharedPtr<FAssetData>>)  //列表控件  里面是我们传入的资产数据类型
-				.ItemHeight(24)  //设置每一行的高度
-				.ListItemsSource(&StoredAssetsData)  //设置listview的  列表数据源  
-				.OnGenerateRow(this,&ASdvanceDeletionTab::OnGenerateRowForList)  //设置生成行的回调函数  就是我们自己定义的函数  这个函数会在列表控件需要生成行的时候被调用
-				
+				ConstructAssetListView()
 			 	
 			]
 			
@@ -91,6 +87,20 @@ void ASdvanceDeletionTab::Construct(const FArguments& InArgs)
 	
 }
 
+
+//创建slistview 的函数
+TSharedRef<SListView<TSharedPtr<FAssetData>>> ASdvanceDeletionTab::ConstructAssetListView()
+{
+	ConstructedAssetListView = 
+	SNew(SListView<TSharedPtr<FAssetData>>)  //列表控件  里面是我们传入的资产数据类型
+	.ItemHeight(24)  //设置每一行的高度
+	.ListItemsSource(&StoredAssetsData)  //设置listview的  列表数据源  
+	.OnGenerateRow(this,&ASdvanceDeletionTab::OnGenerateRowForList) ;
+	
+	
+	return ConstructedAssetListView.ToSharedRef();
+	
+}
 
 
 
@@ -265,11 +275,36 @@ FReply ASdvanceDeletionTab::OnDeleteButttonClicked(TSharedPtr<FAssetData> AssetD
 	//刷新列表
 	if (bAssetDeleted == false)
 	{
+		
+		
+		//先把这个东西从数组里移除
+		if (StoredAssetsData.Contains(AssetDataToDisplayData))
+		{
+			
+			StoredAssetsData.Remove(AssetDataToDisplayData);
+			
+		}
+		
 		//刷新列表
+		RefreshAssetListView();
+		
+		
+		
+		
 	}
 	
 	
 	
 	return FReply::Handled();
 	
+}
+
+
+void ASdvanceDeletionTab::RefreshAssetListView()
+{
+	if (ConstructedAssetListView.IsValid())
+	{
+		ConstructedAssetListView->RebuildList();
+		
+	}
 }
