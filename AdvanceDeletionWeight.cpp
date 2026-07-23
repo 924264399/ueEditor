@@ -77,8 +77,33 @@ void ASdvanceDeletionTab::Construct(const FArguments& InArgs)
 		.AutoHeight()
 		[
 		
-			SNew( SHorizontalBox)  
+			SNew( SHorizontalBox) //水平盒子
 
+			//删除所有按钮
+			+SHorizontalBox::Slot()
+			.FillWidth(10.f)
+			.Padding(5.f)
+			[
+				ConstructDeleteALLButton() //吹昂加删除所有的按钮
+			]
+			
+			
+			//全选所有按钮
+			+SHorizontalBox::Slot()
+			.FillWidth(10.f)
+			.Padding(5.f)
+			[
+				ConstructSelectedAllButton() //创建全选所有的按钮
+			]
+
+			//删除所选assets 的按钮
+			+SHorizontalBox::Slot()
+			.FillWidth(10.f)
+			.Padding(5.f)
+			[
+				ConstructDeleteSelectedAllButton() //创建删除所选assets 的按钮
+			]
+			
 			
 		]
 	
@@ -103,6 +128,19 @@ TSharedRef<SListView<TSharedPtr<FAssetData>>> ASdvanceDeletionTab::ConstructAsse
 }
 
 
+
+void ASdvanceDeletionTab::RefreshAssetListView()
+{
+	if (ConstructedAssetListView.IsValid())
+	{
+		ConstructedAssetListView->RebuildList();
+		
+	}
+}
+
+
+
+#pragma region RowWidgetForAssetListView 	
 
 // 这里的AssetDataToDisplay 是怎么和StoredAssetsData 关联的？  答案是在.ListItemsSource(&StoredAssetsData)这一步  是自动关联的
 //如果 StoredAssetsData 里有 10 个资产，OnGenerateRowForList 大概会被调用 10 次，每次的 AssetDataToDisplay 都是不一样的数组元素。
@@ -300,11 +338,84 @@ FReply ASdvanceDeletionTab::OnDeleteButttonClicked(TSharedPtr<FAssetData> AssetD
 }
 
 
-void ASdvanceDeletionTab::RefreshAssetListView()
+
+#pragma endregion
+
+
+
+TSharedRef<SButton> ASdvanceDeletionTab::ConstructDeleteALLButton()
 {
-	if (ConstructedAssetListView.IsValid())
-	{
-		ConstructedAssetListView->RebuildList();
-		
-	}
+	TSharedRef<SButton> DeleteAllButton = 
+		SNew(SButton)
+		.ContentPadding(FMargin(5.f))
+		.OnClicked(this, &ASdvanceDeletionTab::OnDeleteAllButtonClicked);
+	
+	DeleteAllButton->SetContent(ConstructTextForTabButtons(TEXT("DeleteAllButton")));
+	
+	return DeleteAllButton;
+	
 }
+
+TSharedRef<SButton> ASdvanceDeletionTab::ConstructSelectedAllButton()
+{
+	
+	TSharedRef<SButton> SelectedAllButton = 
+		SNew(SButton)
+		.ContentPadding(FMargin(5.f))
+		.OnClicked(this, &ASdvanceDeletionTab::OnSelectedAllButtonClicked);
+	
+	SelectedAllButton->SetContent(ConstructTextForTabButtons(TEXT("SelectedAllButton")));
+	
+	return SelectedAllButton;
+	
+}
+
+TSharedRef<SButton> ASdvanceDeletionTab::ConstructDeleteSelectedAllButton()
+{
+	TSharedRef<SButton> DeleteSelectedAllButton = 
+		SNew(SButton)
+		.ContentPadding(FMargin(5.f))
+		.OnClicked(this, &ASdvanceDeletionTab::OnDeleteSelectedAllButtonClicked);
+	
+	DeleteSelectedAllButton->SetContent(ConstructTextForTabButtons(TEXT("DeleteSelectedAllButton")));
+	
+	return DeleteSelectedAllButton;
+	
+}
+
+
+
+FReply ASdvanceDeletionTab::OnDeleteAllButtonClicked()
+{
+	return FReply::Unhandled();
+	
+}
+
+
+FReply ASdvanceDeletionTab::OnSelectedAllButtonClicked()
+{
+	return FReply::Unhandled();
+}
+
+FReply ASdvanceDeletionTab::OnDeleteSelectedAllButtonClicked()
+{
+	return FReply::Unhandled();
+}
+
+
+//用来设置文本快
+TSharedRef<STextBlock> ASdvanceDeletionTab::ConstructTextForTabButtons(const FString& TextContent)
+{
+	FSlateFontInfo ButtonTextFont = GetEmboseedTestFont(); //从 GetEmboseedTestFont() 获得一份基础字体配置   ButtonTextFont里面包含了一堆字体信息 大小 形状 边距 字形  这样就不用在下面慢慢设置了
+	ButtonTextFont.Size = 15;
+	
+	TSharedRef<STextBlock> ConstructedTextBlock = SNew(STextBlock)
+		.Text(FText::FromString(TextContent))
+		.Font(ButtonTextFont)
+		.ColorAndOpacity(FColor::White)
+		.Justification(ETextJustify::Center);//对其方式居中
+	
+	return ConstructedTextBlock;
+}
+
+

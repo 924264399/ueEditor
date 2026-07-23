@@ -35,6 +35,8 @@ private:
 	void RefreshAssetListView();
 	
 	
+#pragma region RowWidgetForAssetListView 	
+	
 	TSharedRef<ITableRow> OnGenerateRowForList(TSharedPtr<FAssetData> AssetDataToDisplay,   const TSharedRef<STableViewBase>& OwnerTable);  //  用来生成列表行的 
 	
 	TSharedRef<SCheckBox> ConstructCheckBox(const TSharedPtr<FAssetData> AssetDataToDisplay);  //  用来生成复选框的
@@ -47,7 +49,18 @@ private:
 	
 	FReply OnDeleteButttonClicked(TSharedPtr<FAssetData> AssetDataToDisplayData);
 	
+#pragma endregion	
 	
+	TSharedRef<SButton> ConstructDeleteALLButton();
+	TSharedRef<SButton> ConstructSelectedAllButton();
+	TSharedRef<SButton> ConstructDeleteSelectedAllButton();
+	
+	
+	FReply OnDeleteAllButtonClicked();
+	FReply OnSelectedAllButtonClicked();
+	FReply OnDeleteSelectedAllButtonClicked();
+	
+	TSharedRef<STextBlock> ConstructTextForTabButtons(const FString& TextContent);
 	
 	FSlateFontInfo GetEmboseedTestFont() const { return FCoreStyle::Get().GetFontStyle(FName("EmbossedText")); };    //这是字体样式  
 	
