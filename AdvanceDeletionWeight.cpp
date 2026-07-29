@@ -131,6 +131,8 @@ TSharedRef<SListView<TSharedPtr<FAssetData>>> ASdvanceDeletionTab::ConstructAsse
 
 void ASdvanceDeletionTab::RefreshAssetListView()
 {
+	AssetsDataToDeleteArray.Empty();
+	
 	if (ConstructedAssetListView.IsValid())
 	{
 		ConstructedAssetListView->RebuildList();
@@ -249,16 +251,24 @@ void ASdvanceDeletionTab::OnCheckBoxStateChanges(ECheckBoxState NewState, TShare
 	switch (NewState)  //NewState 是枚举
 	{
 		case ECheckBoxState::Checked: //选中
-		DebugHeader::Print(AssetData->AssetName.ToString(),FColor::Green);
+		
+		AssetsDataToDeleteArray.AddUnique(AssetData); //用AddUnique 保证数组不添加重复项
+		
 			break;
 		
-		case ECheckBoxState::Unchecked: //未选中
-		DebugHeader::Print(AssetData->AssetName.ToString(),FColor::Red);
+		case ECheckBoxState::Unchecked: //取消选中
+		
+		if (AssetsDataToDeleteArray.Contains(AssetData))
+		{
+			AssetsDataToDeleteArray.Remove(AssetData);
+			
+		}		
+		
 			break;
 		
 		
 		case ECheckBoxState::Undetermined: //不确定
-			break;
+			break;  
 		
 		default:
 			break;
@@ -343,6 +353,8 @@ FReply ASdvanceDeletionTab::OnDeleteButttonClicked(TSharedPtr<FAssetData> AssetD
 
 
 
+#pragma region TabButtons
+
 TSharedRef<SButton> ASdvanceDeletionTab::ConstructDeleteALLButton()
 {
 	TSharedRef<SButton> DeleteAllButton = 
@@ -387,6 +399,50 @@ TSharedRef<SButton> ASdvanceDeletionTab::ConstructDeleteSelectedAllButton()
 
 FReply ASdvanceDeletionTab::OnDeleteAllButtonClicked()
 {
+	if (AssetsDataToDeleteArray.Num() == 0)
+	{
+		DebugHeader::ShowMsgDialog(EAppMsgType::Ok,TEXT("NO ASSET CURRENTLY SELECTED"));
+		return  FReply::Unhandled();
+	}
+
+	
+	TArray<FAssetData> AssetDataToDelete;
+	
+	for (const TSharedPtr<FAssetData>& Data : AssetsDataToDeleteArray)
+	{
+		
+		AssetDataToDelete.Add(*Data.Get());  // 这里把TSharedPtr解引用 获得了真正的资产Fassetdata 然后加到一个数组里  这个数组就可以去调用supermanager模块里的删除的方法了
+		
+		
+	}
+	
+	FSuperMangerModule& SuperManagerModule = FModuleManager::LoadModuleChecked<FSuperMangerModule>( TEXT("SuperManger") );
+	
+	const bool bAssetDeleted =  SuperManagerModule.DeleteMultipleAssetsForAssetList(AssetDataToDelete);
+	
+	//记得删完刷新列表
+	if (bAssetDeleted == true)
+	{
+		
+		for (const TSharedPtr<FAssetData>& DeletedData : AssetsDataToDeleteArray)
+		{
+			if (StoredAssetsData.Contains(DeletedData))
+			{
+				
+				StoredAssetsData.Remove(DeletedData);  //这是最初的那个数组
+				
+			}
+				
+		}	
+
+		
+		//刷新列表
+		RefreshAssetListView();
+		
+		
+	}
+	
+	
 	return FReply::Unhandled();
 	
 }
@@ -401,6 +457,7 @@ FReply ASdvanceDeletionTab::OnDeleteSelectedAllButtonClicked()
 {
 	return FReply::Unhandled();
 }
+
 
 
 //用来设置文本快
@@ -418,4 +475,5 @@ TSharedRef<STextBlock> ASdvanceDeletionTab::ConstructTextForTabButtons(const FSt
 	return ConstructedTextBlock;
 }
 
+#pragma endregion 
 

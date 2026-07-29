@@ -62,7 +62,7 @@ public:
 	#pragma region ProccessDataForAdvanceDeletionTab
 	
 		bool DeleteSingleAssetsForAssetList(const FAssetData& AssetDataToDelete);
-	
+		bool DeleteMultipleAssetsForAssetList(const TArray<FAssetData>& AssetsToDelete);
 	
 	#pragma endregion
 	

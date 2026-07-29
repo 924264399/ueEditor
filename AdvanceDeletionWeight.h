@@ -51,6 +51,9 @@ private:
 	
 #pragma endregion	
 	
+	
+#pragma region TabButtons
+	
 	TSharedRef<SButton> ConstructDeleteALLButton();
 	TSharedRef<SButton> ConstructSelectedAllButton();
 	TSharedRef<SButton> ConstructDeleteSelectedAllButton();
@@ -61,6 +64,11 @@ private:
 	FReply OnDeleteSelectedAllButtonClicked();
 	
 	TSharedRef<STextBlock> ConstructTextForTabButtons(const FString& TextContent);
+	
+#pragma endregion	
+	
+	
+	TArray<TSharedPtr<FAssetData>> AssetsDataToDeleteArray; //这个数组我们是希望当用户勾选的时候 把那个资产assetdata添加到这个数组
 	
 	FSlateFontInfo GetEmboseedTestFont() const { return FCoreStyle::Get().GetFontStyle(FName("EmbossedText")); };    //这是字体样式  
 	

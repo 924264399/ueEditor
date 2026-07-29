@@ -415,6 +415,20 @@ void FSuperMangerModule::FixUpRedirectors()
 	
 	}
 
+bool FSuperMangerModule::DeleteMultipleAssetsForAssetList(const TArray<FAssetData>& AssetsToDelete)
+{
+	
+	if (ObjectTools::DeleteAssets(AssetsToDelete)>0)
+	{
+		return true;
+		
+		
+	}
+	
+	return false;
+	
+}
+
 
 #pragma endregion
 
