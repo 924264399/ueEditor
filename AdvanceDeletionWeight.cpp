@@ -10,6 +10,7 @@
 #include "DebugHeader.h"
 #include "SuperManger.h"
 
+#define ListALL TEXT("List All Available Assets")
 
 void ASdvanceDeletionTab::Construct(const FArguments& InArgs)
 {
@@ -18,8 +19,10 @@ void ASdvanceDeletionTab::Construct(const FArguments& InArgs)
 	
 	
 	StoredAssetsData = InArgs._AssetsDataToStore;  //把参数传入到成员变量里  
+	CheckBoxesArray.Empty(); //情况复选框数组
+	AssetsDataToDeleteArray.Empty(); 
 	
-	
+	ComBoxSourceItems.Add(MakeShared<FString>(ListALL) );
 	
 	FSlateFontInfo TitleTextFontInfo = FCoreStyle::GetDefaultFontStyle("Regular", 24);  //设置字体样式
 	
@@ -51,8 +54,18 @@ void ASdvanceDeletionTab::Construct(const FArguments& InArgs)
 		.AutoHeight()
 		[
 
-			SNew( SHorizontalBox)  //水平盒子控件  从做到右放置多个槽位  
+			SNew( SHorizontalBox)  //水平盒子控件  从做到右放置多个槽位
 
+
+			+SHorizontalBox::Slot()
+			.AutoWidth()
+			[
+
+			//创建下拉菜单控件	
+				ConstructComboBox()
+				
+			]
+			
 			
 		]
 		
@@ -131,6 +144,7 @@ TSharedRef<SListView<TSharedPtr<FAssetData>>> ASdvanceDeletionTab::ConstructAsse
 
 void ASdvanceDeletionTab::RefreshAssetListView()
 {
+	CheckBoxesArray.Empty();
 	AssetsDataToDeleteArray.Empty();
 	
 	if (ConstructedAssetListView.IsValid())
@@ -142,7 +156,56 @@ void ASdvanceDeletionTab::RefreshAssetListView()
 
 
 
+#pragma region 	ComboBoxForListingCondition
+	
+TSharedRef<SComboBox<TSharedPtr<FString>>> ASdvanceDeletionTab::ConstructComboBox()
+{
+	
+	TSharedRef<SComboBox<TSharedPtr<FString>>> ConstructedComboBox = 
+		SNew(SComboBox<TSharedPtr<FString>>)
+		.OptionsSource( &ComBoxSourceItems )   //选项源 决定有哪些选项   一般有好几个 所以放在数组里
+		.OnGenerateWidget(this,&ASdvanceDeletionTab::OnGenerateComboContent)  //决定下拉里面是什么控件  这是遍历的哈
+		.OnSelectionChanged(this,&ASdvanceDeletionTab::OnComboSelectionChanged)
+		[
+
+			//这里则是下拉框关闭时，SComboBox 本身显示什么内容。（框体上显示什么）
+			SAssignNew(ComboDiplayTextBlock,STextBlock)
+			.Text(FText::FromString(TEXT("List Assets Option")))
+			
+		];
+		
+	
+	return ConstructedComboBox;
+}
+
+
+TSharedRef<SWidget> ASdvanceDeletionTab::OnGenerateComboContent(TSharedPtr<FString> SourceItem)
+{
+	TSharedRef<STextBlock> ContructedComboBox = SNew(STextBlock)
+		.Text(FText::FromString(*SourceItem.Get()));
+	
+	return ContructedComboBox;
+	
+}
+
+void ASdvanceDeletionTab::OnComboSelectionChanged(TSharedPtr<FString> SelectedOption, ESelectInfo::Type InSelectInfo)//SelectedOption 就是用户选择的
+{
+	DebugHeader::Print(*SelectedOption.Get(),FColor::Green);
+	
+	ComboDiplayTextBlock->SetText(FText::FromString(*SelectedOption.Get()));
+	
+}
+
+
+#pragma endregion  	
+	
+
+
+
+
 #pragma region RowWidgetForAssetListView 	
+
+
 
 // 这里的AssetDataToDisplay 是怎么和StoredAssetsData 关联的？  答案是在.ListItemsSource(&StoredAssetsData)这一步  是自动关联的
 //如果 StoredAssetsData 里有 10 个资产，OnGenerateRowForList 大概会被调用 10 次，每次的 AssetDataToDisplay 都是不一样的数组元素。
@@ -240,6 +303,8 @@ TSharedRef<SCheckBox> ASdvanceDeletionTab::ConstructCheckBox(const TSharedPtr<FA
 	.OnCheckStateChanged(this, &ASdvanceDeletionTab::OnCheckBoxStateChanges,AssetDataToDisplay) //依然绑定回调函数
 	.Visibility(EVisibility::Visible); //可见性是可见
 	
+	CheckBoxesArray.Add(ConstructedCheckBox); //我们把复选框加入数组  注意行已经是循环调用 所以我们这里是不需要用循环去加的
+	
 	return ConstructedCheckBox;
 	
 	
@@ -321,7 +386,7 @@ FReply ASdvanceDeletionTab::OnDeleteButttonClicked(TSharedPtr<FAssetData> AssetD
 	const bool bAssetDeleted =  SuperManagerModule.DeleteSingleAssetsForAssetList(*AssetDataToDisplayData.Get()); 
 	
 	//刷新列表
-	if (bAssetDeleted == false)
+	if (bAssetDeleted)
 	{
 		
 		
@@ -448,14 +513,48 @@ FReply ASdvanceDeletionTab::OnDeleteAllButtonClicked()
 }
 
 
-FReply ASdvanceDeletionTab::OnSelectedAllButtonClicked()
+FReply ASdvanceDeletionTab::OnSelectedAllButtonClicked() //全选复选框
 {
+	
+	if (CheckBoxesArray.Num() == 0)
+	{
+		return FReply::Unhandled();
+	}
+	
+	for (const TSharedRef<SCheckBox>& CheckBox : CheckBoxesArray)
+	{
+		if (!CheckBox->IsChecked()) //检查复选框的选中状态
+		{
+			CheckBox->ToggleCheckedState(); //这个方法是切换复选框的状态  选中的就变成没选中  没选中的就选中
+		}
+	}
+	
 	return FReply::Unhandled();
 }
 
-FReply ASdvanceDeletionTab::OnDeleteSelectedAllButtonClicked()
+
+
+
+
+
+FReply ASdvanceDeletionTab::OnDeleteSelectedAllButtonClicked()  //取消全选复选框
 {
+	
+	if (CheckBoxesArray.Num() == 0)
+	{
+		return FReply::Unhandled();
+	}
+	
+	for (const TSharedRef<SCheckBox>& CheckBox : CheckBoxesArray)
+	{
+		if (CheckBox->IsChecked()) //检查复选框的选中状态
+		{
+			CheckBox->ToggleCheckedState(); //这个方法是切换复选框的状态  选中的就变成没选中  没选中的就选中
+		}
+	}
+	
 	return FReply::Unhandled();
+	
 }
 
 

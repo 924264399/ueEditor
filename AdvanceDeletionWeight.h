@@ -28,11 +28,27 @@ public:
 	
 private:
 	TArray<TSharedPtr<FAssetData>> StoredAssetsData;  //这个是我们上面声明的参数类型    用来存储传入的参数数
+	TArray<TSharedRef<SCheckBox>> CheckBoxesArray; // 存储复选框的数组
+	TArray<TSharedPtr<FAssetData>> AssetsDataToDeleteArray; //这个数组我们是希望当用户勾选的时候 把那个资产assetdata添加到这个数组
 	
 	TSharedRef<SListView<TSharedPtr<FAssetData>>> ConstructAssetListView();
 	TSharedPtr<SListView<TSharedPtr<FAssetData>>>  ConstructedAssetListView;
 	
 	void RefreshAssetListView();
+	
+#pragma region 	ComboBoxForListingCondition
+	
+	TSharedRef<SComboBox<TSharedPtr<FString>>> ConstructComboBox();
+	
+	TArray< TSharedPtr<FString> > ComBoxSourceItems;
+	
+	TSharedRef<SWidget> OnGenerateComboContent(TSharedPtr<FString> SourceItem);
+	
+	void OnComboSelectionChanged( TSharedPtr<FString> SelectedOption,ESelectInfo::Type InSelectInfo);
+	
+	TSharedPtr<STextBlock> ComboDiplayTextBlock;
+	
+#pragma endregion  	
 	
 	
 #pragma region RowWidgetForAssetListView 	
@@ -68,7 +84,7 @@ private:
 #pragma endregion	
 	
 	
-	TArray<TSharedPtr<FAssetData>> AssetsDataToDeleteArray; //这个数组我们是希望当用户勾选的时候 把那个资产assetdata添加到这个数组
+	
 	
 	FSlateFontInfo GetEmboseedTestFont() const { return FCoreStyle::Get().GetFontStyle(FName("EmbossedText")); };    //这是字体样式  
 	
