@@ -429,6 +429,28 @@ bool FSuperMangerModule::DeleteMultipleAssetsForAssetList(const TArray<FAssetDat
 	
 }
 
+void FSuperMangerModule::ListUnusedAssetsForAssetList(const TArray<TSharedPtr<FAssetData>>& AssetsDataToFilter,
+	TArray<TSharedPtr<FAssetData>>& OutUnusedAsstesData)
+{
+	
+	OutUnusedAsstesData.Empty();
+	
+	for (const TSharedPtr<FAssetData>& AssetData : AssetsDataToFilter)
+	{
+		TArray<FString> AssetPackageRefrencers = UEditorAssetLibrary:: FindPackageReferencersForAsset(AssetData->GetObjectPathString()); //获取引用这个资源的所有资源的路径
+		
+		
+		if (AssetPackageRefrencers.Num() == 0)
+		{
+			OutUnusedAsstesData.Add(AssetData); //添加到输出数组里
+			
+		}
+		
+	}
+	
+	
+}
+
 
 #pragma endregion
 

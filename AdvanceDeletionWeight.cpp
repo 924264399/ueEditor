@@ -11,6 +11,7 @@
 #include "SuperManger.h"
 
 #define ListALL TEXT("List All Available Assets")
+#define ListUnused TEXT("List Unused Assets")
 
 void ASdvanceDeletionTab::Construct(const FArguments& InArgs)
 {
@@ -19,10 +20,13 @@ void ASdvanceDeletionTab::Construct(const FArguments& InArgs)
 	
 	
 	StoredAssetsData = InArgs._AssetsDataToStore;  //把参数传入到成员变量里  
+	DisplayAssetsData = StoredAssetsData;  //一开始 这两个数组是完全一样的
+	
 	CheckBoxesArray.Empty(); //情况复选框数组
 	AssetsDataToDeleteArray.Empty(); 
 	
 	ComBoxSourceItems.Add(MakeShared<FString>(ListALL) );
+	ComBoxSourceItems.Add(MakeShared<FString>(ListUnused) );
 	
 	FSlateFontInfo TitleTextFontInfo = FCoreStyle::GetDefaultFontStyle("Regular", 24);  //设置字体样式
 	
@@ -132,7 +136,7 @@ TSharedRef<SListView<TSharedPtr<FAssetData>>> ASdvanceDeletionTab::ConstructAsse
 	ConstructedAssetListView = 
 	SNew(SListView<TSharedPtr<FAssetData>>)  //列表控件  里面是我们传入的资产数据类型
 	.ItemHeight(24)  //设置每一行的高度
-	.ListItemsSource(&StoredAssetsData)  //设置listview的  列表数据源  
+	.ListItemsSource(&DisplayAssetsData)  //设置listview的  列表数据源  
 	.OnGenerateRow(this,&ASdvanceDeletionTab::OnGenerateRowForList) ;
 	
 	
@@ -193,6 +197,26 @@ void ASdvanceDeletionTab::OnComboSelectionChanged(TSharedPtr<FString> SelectedOp
 	DebugHeader::Print(*SelectedOption.Get(),FColor::Green);
 	
 	ComboDiplayTextBlock->SetText(FText::FromString(*SelectedOption.Get()));
+	
+	//我们要用模块的函数来筛选fassetsdata 改变DisplayAssetsData数组
+	
+	FSuperMangerModule& SuperManagerModule = FModuleManager::LoadModuleChecked<FSuperMangerModule>( TEXT("SuperManger") );
+	
+	if ( *SelectedOption.Get() == ListALL)
+	{
+		//列出所有的
+		
+	}
+	
+	if ( *SelectedOption.Get() == ListUnused)
+	{
+		//进行筛选 未使用的
+		
+		SuperManagerModule.ListUnusedAssetsForAssetList(StoredAssetsData,DisplayAssetsData);  //筛选然和填充DisplayAssetsData
+		RefreshAssetListView();
+		
+	}
+	
 	
 }
 
