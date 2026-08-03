@@ -12,6 +12,7 @@
 
 #define ListALL TEXT("List All Available Assets")
 #define ListUnused TEXT("List Unused Assets")
+#define ListSameName TEXT("List Assets With Same Name")
 
 void ASdvanceDeletionTab::Construct(const FArguments& InArgs)
 {
@@ -27,6 +28,7 @@ void ASdvanceDeletionTab::Construct(const FArguments& InArgs)
 	
 	ComBoxSourceItems.Add(MakeShared<FString>(ListALL) );
 	ComBoxSourceItems.Add(MakeShared<FString>(ListUnused) );
+	ComBoxSourceItems.Add(MakeShared<FString>(ListSameName) );//列出同名资产
 	
 	FSlateFontInfo TitleTextFontInfo = FCoreStyle::GetDefaultFontStyle("Regular", 24);  //设置字体样式
 	
@@ -194,7 +196,7 @@ TSharedRef<SWidget> ASdvanceDeletionTab::OnGenerateComboContent(TSharedPtr<FStri
 
 void ASdvanceDeletionTab::OnComboSelectionChanged(TSharedPtr<FString> SelectedOption, ESelectInfo::Type InSelectInfo)//SelectedOption 就是用户选择的
 {
-	DebugHeader::Print(*SelectedOption.Get(),FColor::Green);
+	//DebugHeader::Print(*SelectedOption.Get(),FColor::Green);
 	
 	ComboDiplayTextBlock->SetText(FText::FromString(*SelectedOption.Get()));
 	
@@ -205,6 +207,8 @@ void ASdvanceDeletionTab::OnComboSelectionChanged(TSharedPtr<FString> SelectedOp
 	if ( *SelectedOption.Get() == ListALL)
 	{
 		//列出所有的
+		DisplayAssetsData = StoredAssetsData;
+		RefreshAssetListView();
 		
 	}
 	
@@ -213,6 +217,14 @@ void ASdvanceDeletionTab::OnComboSelectionChanged(TSharedPtr<FString> SelectedOp
 		//进行筛选 未使用的
 		
 		SuperManagerModule.ListUnusedAssetsForAssetList(StoredAssetsData,DisplayAssetsData);  //筛选然和填充DisplayAssetsData
+		RefreshAssetListView();
+		
+	}
+	
+	if ( *SelectedOption.Get() == ListSameName)
+	{
+		//列出所有同名资源
+		SuperManagerModule.ListSameNameAssetsForAssetList(StoredAssetsData,DisplayAssetsData);  //筛选然和填充DisplayAssetsData
 		RefreshAssetListView();
 		
 	}
@@ -521,6 +533,17 @@ FReply ASdvanceDeletionTab::OnDeleteAllButtonClicked()
 				StoredAssetsData.Remove(DeletedData);  //这是最初的那个数组
 				
 			}
+			
+			
+			
+			if (DisplayAssetsData.Contains(DeletedData))
+			{
+				
+				
+				DisplayAssetsData.Remove(DeletedData);
+			}
+			
+			
 				
 		}	
 

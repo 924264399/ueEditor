@@ -8,6 +8,7 @@
 #include "EditorAssetLibrary.h"
 #include "ObjectTools.h"
 #include "AssetToolsModule.h"
+#include "FindInBlueprintManager.h"
 #include "SAdvancedPreviewDetailsTab.h"
 
 #include "AssetRegistry/AssetRegistryModule.h"
@@ -268,6 +269,8 @@ void FSuperMangerModule::OnDeleteUnsuedAssetsButtonClicked()
 
 void FSuperMangerModule::OnAdvanceDeleteButtonClicked()
 {
+	
+	FixUpRedirectors();
 	FGlobalTabmanager::Get()->TryInvokeTab(FName("AdvanceDeletionTab")); //打开我们自定义的标签页
 	
 	
@@ -448,6 +451,48 @@ void FSuperMangerModule::ListUnusedAssetsForAssetList(const TArray<TSharedPtr<FA
 		
 	}
 	
+	
+}
+
+void FSuperMangerModule::ListSameNameAssetsForAssetList(const TArray<TSharedPtr<FAssetData>>& AssetsDataToFilter,
+	TArray<TSharedPtr<FAssetData>>& OutSameNameAsstesData)
+{
+	
+	OutSameNameAsstesData.Empty();
+	
+	//使用TMultiMap处理同名文件  对比普通的TMap  这个东西可以一个key 对多个value
+	TMultiMap<FString, TSharedPtr<FAssetData>> AssetsInfoMultiMap;
+	
+	
+	//第一轮遍历 每个资产名字作为key  资产FAssetData指针作为vale
+	for (const TSharedPtr<FAssetData>& DataSharedPtr : AssetsDataToFilter)
+	{
+		AssetsInfoMultiMap.Add(DataSharedPtr->AssetName.ToString(), DataSharedPtr);
+		
+	}
+	
+	
+	//第二轮遍历 查找同名组
+	
+	for (const TSharedPtr<FAssetData>& DataSharedPtr : AssetsDataToFilter)
+	{
+		TArray <TSharedPtr<FAssetData>> OutAssetsData;
+		AssetsInfoMultiMap.MultiFind(DataSharedPtr->AssetName.ToString(), OutAssetsData); //MultiFind() 会找到这个 Key 对应的所有 Value。
+		
+		if (OutAssetsData.Num() <= 1) continue; //如果这个名字的资产只有一个 就跳过
+		
+		for (const TSharedPtr<FAssetData>& SameNameData : OutAssetsData)
+		{
+			
+			if (SameNameData.IsValid())
+			{
+				OutSameNameAsstesData.AddUnique(SameNameData); //添加到输出数组里  用AddUnique 保证不重复	
+				
+			}
+			
+		}
+		
+	}
 	
 }
 
