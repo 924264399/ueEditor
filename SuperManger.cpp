@@ -496,6 +496,15 @@ void FSuperMangerModule::ListSameNameAssetsForAssetList(const TArray<TSharedPtr<
 	
 }
 
+void FSuperMangerModule::SyncCBToClickedAssetForAssetList(const FString& AssetPathToSync)
+ {
+ 	TArray<FString> AssetsPathToSync;
+ 	AssetsPathToSync.Add(AssetPathToSync);
+ 	
+ 	UEditorAssetLibrary::SyncBrowserToObjects(AssetsPathToSync); //同步内容浏览器到指定资产
+ 	
+ }
+
 
 #pragma endregion
 

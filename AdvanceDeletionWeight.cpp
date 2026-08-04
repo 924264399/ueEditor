@@ -25,12 +25,13 @@ void ASdvanceDeletionTab::Construct(const FArguments& InArgs)
 	
 	CheckBoxesArray.Empty(); //情况复选框数组
 	AssetsDataToDeleteArray.Empty(); 
+	ComBoxSourceItems.Empty();  //清空下拉菜单的数组
 	
 	ComBoxSourceItems.Add(MakeShared<FString>(ListALL) );
 	ComBoxSourceItems.Add(MakeShared<FString>(ListUnused) );
 	ComBoxSourceItems.Add(MakeShared<FString>(ListSameName) );//列出同名资产
 	
-	FSlateFontInfo TitleTextFontInfo = FCoreStyle::GetDefaultFontStyle("Regular", 24);  //设置字体样式
+	FSlateFontInfo TitleTextFontInfo = GetEmboseedTestFont();  //设置字体样式
 	
 	// ChildSlot  // 默认槽位
 	// [
@@ -139,7 +140,8 @@ TSharedRef<SListView<TSharedPtr<FAssetData>>> ASdvanceDeletionTab::ConstructAsse
 	SNew(SListView<TSharedPtr<FAssetData>>)  //列表控件  里面是我们传入的资产数据类型
 	.ItemHeight(24)  //设置每一行的高度
 	.ListItemsSource(&DisplayAssetsData)  //设置listview的  列表数据源  
-	.OnGenerateRow(this,&ASdvanceDeletionTab::OnGenerateRowForList) ;
+	.OnGenerateRow(this,&ASdvanceDeletionTab::OnGenerateRowForList) 
+	.OnMouseButtonClick(this,&ASdvanceDeletionTab::OnRowWidgetMoustButtonClicked);  //鼠标点击事件	
 	
 	
 	return ConstructedAssetListView.ToSharedRef();
@@ -329,6 +331,16 @@ TSharedRef<ITableRow> ASdvanceDeletionTab::OnGenerateRowForList(TSharedPtr<FAsse
 	
 }
 
+void ASdvanceDeletionTab::OnRowWidgetMoustButtonClicked(TSharedPtr<FAssetData> AssetDataToDisplay) //行控件的鼠标点击事件回调
+{
+	
+	FSuperMangerModule& SuperManagerModule = FModuleManager::LoadModuleChecked<FSuperMangerModule>( TEXT("SuperManger") );
+	
+	SuperManagerModule.SyncCBToClickedAssetForAssetList(AssetDataToDisplay->ObjectPath.ToString());
+	
+	
+}
+
 TSharedRef<SCheckBox> ASdvanceDeletionTab::ConstructCheckBox(const TSharedPtr<FAssetData> AssetDataToDisplay)
 {
 	
@@ -433,6 +445,15 @@ FReply ASdvanceDeletionTab::OnDeleteButttonClicked(TSharedPtr<FAssetData> AssetD
 			StoredAssetsData.Remove(AssetDataToDisplayData);
 			
 		}
+		
+		if (DisplayAssetsData.Contains(AssetDataToDisplayData))
+		{
+			
+			DisplayAssetsData.Remove(AssetDataToDisplayData);
+			
+		}
+		
+		
 		
 		//刷新列表
 		RefreshAssetListView();

@@ -67,6 +67,8 @@ public:
 		void ListUnusedAssetsForAssetList(const TArray<TSharedPtr<FAssetData>>& AssetsDataToFilter,TArray<TSharedPtr<FAssetData>>& OutUnusedAsstesData);
 		void ListSameNameAssetsForAssetList(const TArray<TSharedPtr<FAssetData>>& AssetsDataToFilter,TArray<TSharedPtr<FAssetData>>& OutSameNameAsstesData);
 	
+		void SyncCBToClickedAssetForAssetList(const FString& AssetPathToSync);
+	
 	#pragma endregion
 	
 	

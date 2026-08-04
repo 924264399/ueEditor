@@ -59,6 +59,10 @@ private:
 	
 	TSharedRef<ITableRow> OnGenerateRowForList(TSharedPtr<FAssetData> AssetDataToDisplay,   const TSharedRef<STableViewBase>& OwnerTable);  //  用来生成列表行的 
 	
+	
+	void OnRowWidgetMoustButtonClicked(TSharedPtr<FAssetData> AssetDataToDisplay);
+	
+	
 	TSharedRef<SCheckBox> ConstructCheckBox(const TSharedPtr<FAssetData> AssetDataToDisplay);  //  用来生成复选框的
 	
 	void OnCheckBoxStateChanges(ECheckBoxState NewState, TSharedPtr<FAssetData> AssetData);  //复选框状态改变的回调函数
