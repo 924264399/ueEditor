@@ -52,6 +52,10 @@ private:
 	
 	TSharedPtr<STextBlock> ComboDiplayTextBlock;
 	
+	TSharedRef<STextBlock> ConstructComboBoxWithHelpText(const FString& TextContent,ETextJustify::Type TextJustify );
+	
+	
+	
 #pragma endregion  	
 	
 	

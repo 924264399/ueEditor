@@ -73,6 +73,14 @@ void ASdvanceDeletionTab::Construct(const FArguments& InArgs)
 				
 			]
 			
+			//帮助文本
+			+SHorizontalBox::Slot()
+			.FillWidth(.6f)
+			[
+
+				ConstructComboBoxWithHelpText(TEXT("Select a filter to list assets"),ETextJustify::Center)
+			]
+			
 			
 		]
 		
@@ -235,6 +243,22 @@ void ASdvanceDeletionTab::OnComboSelectionChanged(TSharedPtr<FString> SelectedOp
 }
 
 
+TSharedRef<STextBlock> ASdvanceDeletionTab::ConstructComboBoxWithHelpText(const FString& TextContent,
+	ETextJustify::Type TextJustify)
+{
+	
+	TSharedRef<STextBlock> ContructedHelpText = 
+		SNew(STextBlock)
+		.Text(FText::FromString(TextContent))
+		.Justification(TextJustify);
+	
+	return ContructedHelpText;
+	
+}
+
+
+
+
 #pragma endregion  	
 	
 
@@ -242,6 +266,7 @@ void ASdvanceDeletionTab::OnComboSelectionChanged(TSharedPtr<FString> SelectedOp
 
 
 #pragma region RowWidgetForAssetListView 	
+
 
 
 
