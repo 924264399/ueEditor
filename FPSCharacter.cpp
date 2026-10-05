@@ -1,5 +1,6 @@
 #include "FPS/FPSCharacter.h"
 #include "FPS/FPSInteractable.h"
+#include "FPS/FPSInteractionActor.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "CollisionQueryParams.h"
@@ -123,6 +124,15 @@ void AFPSCharacter::TryInteract()
 	}
 
 	AActor* HitActor = HitResult.GetActor();  //如果有 就先获取这个Actor的指针
+	if (const AFPSInteractionActor* InteractionActor = Cast<AFPSInteractionActor>(HitActor))
+	{
+		// 特殊交互物可限制必须命中某个组件；普通交互物默认接受自身组件。
+		if (!InteractionActor->CanInteractFromHit(HitResult))
+		{
+			return;
+		}
+	}
+
 	if (IsValid(HitActor) && HitActor->GetClass()->ImplementsInterface(UFPSInteractable::StaticClass()))  //判断是否存在 + 这个actor是否实现了IFPSInteractable接口
 	{
 		IFPSInteractable::Execute_Interact(HitActor, this); //直接调用
