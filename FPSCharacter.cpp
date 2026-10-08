@@ -3,11 +3,13 @@
 #include "FPS/FPSInteractionActor.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/SpotLightComponent.h"
 #include "CollisionQueryParams.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Engine/World.h"
 #include "GameFramework/Controller.h"
+#include "GameFramework/SpringArmComponent.h"
 #include "InputAction.h"
 #include "InputActionValue.h"
 #include "InputMappingContext.h"
@@ -20,11 +22,33 @@ AFPSCharacter::AFPSCharacter()
 	FirstPersonCamera->SetupAttachment(GetCapsuleComponent());
 	FirstPersonCamera->SetRelativeLocation(FVector(0.f, 0.f, BaseEyeHeight));
 	FirstPersonCamera->bUsePawnControlRotation = true;
+
+	// 第一人称手电筒使用长度为 0 的弹簧臂，保留可调节的组件层级并跟随摄像机朝向。
+	FlashlightArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("FlashlightArm"));
+	FlashlightArm->SetupAttachment(FirstPersonCamera);
+	FlashlightArm->TargetArmLength = 0.0f;
+	FlashlightArm->bDoCollisionTest = false;
+
+	Flashlight = CreateDefaultSubobject<USpotLightComponent>(TEXT("Flashlight"));
+	Flashlight->SetupAttachment(FlashlightArm);
+	Flashlight->SetRelativeLocation(FVector(25.0f, 0.0f, 0.0f));
+	Flashlight->SetRelativeRotation(FRotator::ZeroRotator);
+	Flashlight->SetIntensity(5000.0f);
+	Flashlight->SetAttenuationRadius(1500.0f);
+	Flashlight->SetInnerConeAngle(20.0f);
+	Flashlight->SetOuterConeAngle(35.0f);
+	Flashlight->SetCastShadows(true);
+	Flashlight->SetVisibility(bFlashlightOn);
 }
 
 void AFPSCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (Flashlight)
+	{
+		Flashlight->SetVisibility(bFlashlightOn);
+	}
 
 	UE_LOG(LogTemp, Log, TEXT("AFPSCharacter::BeginPlay"));
 }
@@ -84,10 +108,25 @@ void AFPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 		{
 			EnhancedInput->BindAction(InteractAction, ETriggerEvent::Started, this, &AFPSCharacter::TryInteract);//角色尝试发起交互
 		}
+
+		if (FlashlightToggleAction)
+		{
+			EnhancedInput->BindAction(FlashlightToggleAction, ETriggerEvent::Started, this, &AFPSCharacter::ToggleFlashlight);
+		}
 	}
 	else
 	{
 		UE_LOG(LogTemp, Error, TEXT("AFPSCharacter: input component is not UEnhancedInputComponent"));
+	}
+}
+
+void AFPSCharacter::ToggleFlashlight()
+{
+	bFlashlightOn = !bFlashlightOn;
+
+	if (Flashlight)
+	{
+		Flashlight->SetVisibility(bFlashlightOn); //先同步灯的状态  默认是关闭 所以开启游戏的时候是关手电筒
 	}
 }
 

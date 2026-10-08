@@ -4,7 +4,11 @@
 #include "GameFramework/Character.h"
 #include "FPSCharacter.generated.h"
 
+//前置声明  之后在cpp里面 include
+//当然你可以直接include
 class UCameraComponent;
+class USpringArmComponent;
+class USpotLightComponent;
 class UInputMappingContext;
 class UInputAction;
 struct FHitResult;
@@ -48,6 +52,10 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
 	TObjectPtr<UInputAction> InteractAction;
 
+	// 手电筒开关的 Input Action；资产在蓝图子类的 Class Defaults 中指定。
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input")
+	TObjectPtr<UInputAction> FlashlightToggleAction;
+
 	//视角灵敏度
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input",
 		meta = (ClampMin = "0.0", UIMin = "0.0", UIMax = "5.0"))
@@ -59,9 +67,20 @@ protected:
 
 	void Move(const FInputActionValue& Value);
 	void TryInteract();
+	void ToggleFlashlight();
 	bool TraceForInteraction(FHitResult& OutHit) const;
 
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UCameraComponent> FirstPersonCamera;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Flashlight", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<USpringArmComponent> FlashlightArm;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Flashlight", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<USpotLightComponent> Flashlight;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flashlight",
+		meta = (AllowPrivateAccess = "true"))
+	bool bFlashlightOn = false;
 };
