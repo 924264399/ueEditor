@@ -2,6 +2,7 @@
 #include "FPS/FPSInteractable.h"
 #include "FPS/FPSInteractionActor.h"
 #include "Camera/CameraComponent.h"
+#include "Camera/CameraShakeBase.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/SpotLightComponent.h"
 #include "CollisionQueryParams.h"
@@ -9,6 +10,8 @@
 #include "EnhancedInputSubsystems.h"
 #include "Engine/World.h"
 #include "GameFramework/Controller.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "Camera/PlayerCameraManager.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "InputAction.h"
 #include "InputActionValue.h"
@@ -16,7 +19,8 @@
 
 AFPSCharacter::AFPSCharacter()
 {
-	PrimaryActorTick.bCanEverTick = false;
+	PrimaryActorTick.bCanEverTick = true;
+	GetCharacterMovement()->GetNavAgentPropertiesRef().bCanCrouch = true;
 
 	FirstPersonCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
 	FirstPersonCamera->SetupAttachment(GetCapsuleComponent());
@@ -41,6 +45,13 @@ AFPSCharacter::AFPSCharacter()
 	Flashlight->SetVisibility(bFlashlightOn);
 }
 
+void AFPSCharacter::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+
+	UpdateCameraBob();
+}
+
 void AFPSCharacter::BeginPlay()
 {
 	Super::BeginPlay();
@@ -49,6 +60,27 @@ void AFPSCharacter::BeginPlay()
 	{
 		Flashlight->SetVisibility(bFlashlightOn);
 	}
+
+	if (GetCharacterMovement())
+	{
+		GetCharacterMovement()->MaxWalkSpeedCrouched = CrouchSpeed;
+	}
+
+	ApplyMovementSpeed();
+
+	CurrentStamina = FMath::Max(0.0f, MaxStamina); //初始化当前体力值为100
+
+	//创建一个循环计时器，每隔一段时间调用一次 UpdateStamina()。
+	if (UWorld* World = GetWorld())
+	{
+		const float TimerInterval = FMath::Max(StaminaUpdateInterval, 0.01f);//确保时间间隔不低于0.01s
+		World->GetTimerManager().SetTimer(
+			StaminaTimerHandle,
+			this,
+			&AFPSCharacter::UpdateStamina, //获取函数指针
+			TimerInterval,
+			true);
+	} //GetTimerManager是时间管理器 SetTimer启动计时器每隔端时间调用
 
 	UE_LOG(LogTemp, Log, TEXT("AFPSCharacter::BeginPlay"));
 }
@@ -113,6 +145,22 @@ void AFPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 		{
 			EnhancedInput->BindAction(FlashlightToggleAction, ETriggerEvent::Started, this, &AFPSCharacter::ToggleFlashlight);
 		}
+
+		if (SprintAction)
+		{
+			EnhancedInput->BindAction(SprintAction, ETriggerEvent::Started, this, &AFPSCharacter::StartSprint);//按下跑步shift 调用一次
+			EnhancedInput->BindAction(SprintAction, ETriggerEvent::Completed, this, &AFPSCharacter::StopSprint); //松开  调用一次
+			EnhancedInput->BindAction(SprintAction, ETriggerEvent::Canceled, this, &AFPSCharacter::StopSprint); //表示输入动作被取消，而不是正常结束
+		}
+
+		if (CrouchAction)
+		{
+			EnhancedInput->BindAction(CrouchAction, ETriggerEvent::Started, this, &AFPSCharacter::ToggleCrouch);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("AFPSCharacter: CrouchAction is not assigned"));
+		}
 	}
 	else
 	{
@@ -130,7 +178,182 @@ void AFPSCharacter::ToggleFlashlight()
 	}
 }
 
+void AFPSCharacter::StartSprint()
+{
+	if (!CanStartSprint())
+	{
+		return;
+	}
 
+	bIsSprinting = true;
+	ApplyMovementSpeed();
+}
+
+void AFPSCharacter::StopSprint()
+{
+	bIsSprinting = false;
+	ApplyMovementSpeed();
+}
+
+void AFPSCharacter::StartCrouch()
+{
+	if (bIsSprinting)
+	{
+		StopSprint();
+	}
+
+	Crouch();
+	ApplyMovementSpeed();
+}
+
+void AFPSCharacter::StopCrouch()
+{
+	UnCrouch();
+	ApplyMovementSpeed();
+}
+
+void AFPSCharacter::ToggleCrouch()
+{
+	if (bIsCrouched)
+	{
+		StopCrouch();
+	}
+	else
+	{
+		StartCrouch();
+	}
+}
+
+bool AFPSCharacter::CanStartSprint() const
+{
+	return !bIsCrouched && CurrentStamina > 0.0f;
+}
+
+void AFPSCharacter::ApplyMovementSpeed()
+{
+	UCharacterMovementComponent* MovementComponent = GetCharacterMovement();
+	if (!MovementComponent)
+	{
+		return;
+	}
+
+	MovementComponent->MaxWalkSpeedCrouched = CrouchSpeed;
+
+	if (bIsCrouched)
+	{
+		return;
+	}
+
+	MovementComponent->MaxWalkSpeed = bIsSprinting ? RunSpeed : WalkSpeed;
+}
+
+void AFPSCharacter::UpdateStamina()
+{
+	const float TimerInterval = FMath::Max(StaminaUpdateInterval, 0.01f);//体力更新时间间隔
+
+	if (bIsSprinting)
+	{
+		CurrentStamina = FMath::Clamp(
+			CurrentStamina - StaminaDrainRate * TimerInterval,
+			0.0f,
+			MaxStamina); //当前体力值 - 降低速率*时间间隔
+
+		if (CurrentStamina <= 0.0f)
+		{
+			StopSprint();
+		}
+	}
+	else
+	{
+		CurrentStamina = FMath::Clamp(
+			CurrentStamina + StaminaRecoveryRate * TimerInterval,
+			0.0f,
+			MaxStamina);
+	}
+}
+
+void AFPSCharacter::UpdateCameraBob()
+{
+	UCharacterMovementComponent* MovementComponent = GetCharacterMovement();
+	APlayerController* PlayerController = Cast<APlayerController>(Controller);
+	if (!MovementComponent || !PlayerController || !PlayerController->PlayerCameraManager)
+	{
+		StopCameraBob();
+		CameraBobState = ECameraBobState::None;
+		return;
+	}
+
+	const float HorizontalSpeed = GetVelocity().Size2D();
+	const bool bIsGrounded = MovementComponent->IsMovingOnGround();
+	const bool bIsMoving = HorizontalSpeed >= CameraBobMinSpeed;
+
+	ECameraBobState NewState = ECameraBobState::None;
+	float ShakeScale = 0.0f;
+	TSubclassOf<UCameraShakeBase> ShakeClass;
+
+	if (bIsGrounded)
+	{
+		if (!bIsMoving)
+		{
+			// 复用行走 Shake，给站立状态一个很轻微的呼吸感。
+			NewState = ECameraBobState::Idle;
+			ShakeClass = WalkCameraShake;
+			ShakeScale = IdleCameraBobScale;
+		}
+		else if (bIsSprinting)
+		{
+			NewState = ECameraBobState::Run;
+			ShakeClass = RunCameraShake;
+			ShakeScale = FMath::GetMappedRangeValueClamped(
+				FVector2D(0.0f, FMath::Max(RunSpeed, 1.0f)),
+				FVector2D(0.0f, 1.0f),
+				HorizontalSpeed);
+		}
+		else
+		{
+			NewState = ECameraBobState::Walk;
+			ShakeClass = WalkCameraShake;
+			ShakeScale = FMath::GetMappedRangeValueClamped(
+				FVector2D(0.0f, FMath::Max(WalkSpeed, 1.0f)),
+				FVector2D(0.0f, 1.0f),
+				HorizontalSpeed);
+		}
+	}
+
+	if (NewState == CameraBobState)
+	{
+		return;
+	}
+
+	StopCameraBob();
+	CameraBobState = NewState;
+
+	if (NewState != ECameraBobState::None && ShakeClass && ShakeScale > 0.0f)
+	{
+		ActiveCameraShake = PlayerController->PlayerCameraManager->StartCameraShake(
+			ShakeClass,
+			ShakeScale,
+			ECameraShakePlaySpace::CameraLocal);
+	}
+}
+
+void AFPSCharacter::StopCameraBob()
+{
+	if (!ActiveCameraShake)
+	{
+		return;
+	}
+
+	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
+	{
+		if (PlayerController->PlayerCameraManager)
+		{
+			PlayerController->PlayerCameraManager->StopCameraShake(ActiveCameraShake, false);
+		}
+	}
+
+	ActiveCameraShake = nullptr;
+}
 //为了让移动方向跟随摄像机的水平朝向，通常使用 Controller 的 Yaw
 void AFPSCharacter::Move(const FInputActionValue& Value)
 {
