@@ -2,7 +2,7 @@
 
 #include "Components/LightComponent.h"
 #include "Components/StaticMeshComponent.h"
-#include "Engine/Light.h"
+#include "GameFramework/Actor.h"
 
 AFPSLightSwitch::AFPSLightSwitch()
 {
@@ -20,10 +20,15 @@ void AFPSLightSwitch::Interact_Implementation(AActor* Interactor)
 		return;
 	}
 
-	ULightComponent* LightComponent = TargetLight->GetLightComponent();
+	ULightComponent* LightComponent = TargetLight->FindComponentByClass<ULightComponent>();
 	if (!IsValid(LightComponent))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("%s has no valid light component."), *GetName());
+		UE_LOG(
+			LogTemp,
+			Warning,
+			TEXT("%s target %s has no valid LightComponent."),
+			*GetName(),
+			*TargetLight->GetName());
 		return;
 	}
 
