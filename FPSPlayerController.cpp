@@ -28,7 +28,7 @@ void AFPSPlayerController::SetupInputComponent()
 				ToggleInventoryAction,
 				ETriggerEvent::Started,
 				this,
-				&AFPSPlayerController::ToggleInventory);
+				&AFPSPlayerController::ToggleInventory); //TAB键位绑定这个道具栏的开启关闭
 		}
 	}
 }
@@ -64,6 +64,8 @@ void AFPSPlayerController::CreateInventoryMenu()
 	}
 }
 
+
+//道具栏状态控制
 void AFPSPlayerController::ToggleInventory(const FInputActionValue& /*Value*/)
 {
 	if (bInventoryOpen)
@@ -76,6 +78,8 @@ void AFPSPlayerController::ToggleInventory(const FInputActionValue& /*Value*/)
 	}
 }
 
+
+//开启道具栏
 void AFPSPlayerController::OpenInventory()
 {
 	if (!InventoryMenuRef)
@@ -103,6 +107,8 @@ void AFPSPlayerController::OpenInventory()
 	SetInputMode(InputMode);
 }
 
+
+////关闭这个道具栏的可视
 void AFPSPlayerController::CloseInventory()
 {
 	if (!InventoryMenuRef)

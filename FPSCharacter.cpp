@@ -1,6 +1,7 @@
 #include "FPS/FPSCharacter.h"
 #include "FPS/FPSInteractable.h"
 #include "FPS/FPSInteractionActor.h"
+#include "FPS/FPSInventoryComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Camera/CameraShakeBase.h"
 #include "Components/CapsuleComponent.h"
@@ -43,6 +44,8 @@ AFPSCharacter::AFPSCharacter()
 	Flashlight->SetOuterConeAngle(35.0f);
 	Flashlight->SetCastShadows(true);
 	Flashlight->SetVisibility(bFlashlightOn);
+
+	InventoryComponent = CreateDefaultSubobject<UFPSInventoryComponent>(TEXT("InventoryComponent"));
 }
 
 void AFPSCharacter::Tick(float DeltaSeconds)
