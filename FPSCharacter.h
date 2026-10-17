@@ -13,6 +13,7 @@ class USpringArmComponent;
 class USpotLightComponent;
 class UInputMappingContext;
 class UInputAction;
+class UFPSInventoryComponent;
 struct FHitResult;
 struct FInputActionValue;
 
@@ -28,6 +29,9 @@ public:
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 
 	UCameraComponent* GetFirstPersonCamera() const { return FirstPersonCamera; }
+
+	UFUNCTION(BlueprintPure, Category = "库存", meta = (DisplayName = "获取库存组件"))
+	UFPSInventoryComponent* GetInventoryComponent() const { return InventoryComponent; }
 
 protected:
 	virtual void BeginPlay() override;
@@ -161,6 +165,10 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Flashlight", meta = (DisplayName = "手电筒", AllowPrivateAccess = "true"))
 	TObjectPtr<USpotLightComponent> Flashlight;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "库存",
+		meta = (DisplayName = "库存组件", AllowPrivateAccess = "true"))
+	TObjectPtr<UFPSInventoryComponent> InventoryComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flashlight",
 		meta = (DisplayName = "手电筒开启", AllowPrivateAccess = "true"))
