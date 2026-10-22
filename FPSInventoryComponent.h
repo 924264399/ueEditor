@@ -26,7 +26,7 @@ struct FFPSInventorySlot
 	}
 };
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnFPSInventoryChanged);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnFPSInventoryChanged);  //这是一个广播（委托）  用于拾取物体之后更新UI
 
 /** 保存并管理玩家的库存槽位。 */
 UCLASS(ClassGroup = (FPS), meta = (BlueprintSpawnableComponent, DisplayName = "库存组件"))
@@ -48,7 +48,7 @@ public:
 	int32 GetCapacity() const { return Capacity; }
 
 	UPROPERTY(BlueprintAssignable, Category = "库存", meta = (DisplayName = "库存变化时"))
-	FOnFPSInventoryChanged OnInventoryChanged;
+	FOnFPSInventoryChanged OnInventoryChanged;  //委托函数
 
 protected:
 	virtual void BeginPlay() override;

@@ -13,6 +13,7 @@ void UFPSInventoryComponent::BeginPlay()
 
 	Capacity = FMath::Max(1, Capacity);
 	InventorySlots.SetNum(Capacity);
+	OnInventoryChanged.Broadcast();
 }
 
 bool UFPSInventoryComponent::AddItem(UFPSItemDefinition* ItemDefinition, int32 Amount)
