@@ -2,9 +2,11 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "Styling/SlateBrush.h"
 #include "FPSInventorySlotWidget.generated.h"
 
 class UImage;
+class UButton;
 class UTextBlock;
 class UFPSItemDefinition;
 
@@ -19,6 +21,10 @@ public:
 	void UpdateSlot(UFPSItemDefinition* ItemDefinition, int32 Amount);
 
 protected:
+	/** 空槽仍显示按钮外观，但不响应鼠标悬停或点击。 */
+	UPROPERTY(meta = (BindWidget, DisplayName = "槽位按钮"))
+	TObjectPtr<UButton> SlotButton;
+
 	/** 蓝图中的图像控件命名为 SlotImage。 */
 	UPROPERTY(meta = (BindWidgetOptional, DisplayName = "道具图像"))
 	TObjectPtr<UImage> SlotImage;
@@ -30,4 +36,11 @@ protected:
 	/** 蓝图中的文本控件命名为 ItemNameText。 */
 	UPROPERTY(meta = (BindWidgetOptional, DisplayName = "道具名称文本"))
 	TObjectPtr<UTextBlock> ItemNameText;
+
+private:
+	/** 首次刷新时保存蓝图中 SlotImage 设置的空槽图案。 */
+	UPROPERTY(Transient)
+	FSlateBrush EmptySlotBrush;
+
+	bool bHasCachedEmptyBrush = false;
 };
