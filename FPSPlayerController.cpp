@@ -1,5 +1,7 @@
 #include "FPS/FPSPlayerController.h"
+#include "FPS/FPSInventoryPanelWidget.h"
 #include "Blueprint/UserWidget.h"
+#include "Blueprint/WidgetTree.h"
 #include "EnhancedInputComponent.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -60,6 +62,28 @@ void AFPSPlayerController::CreateInventoryMenu()
 	if (InventoryMenuRef)
 	{
 		InventoryMenuRef->AddToViewport();
+		InventoryPanelRef = Cast<UFPSInventoryPanelWidget>(InventoryMenuRef);
+		if (!InventoryPanelRef.IsValid() && InventoryMenuRef->WidgetTree)
+		{
+			TArray<UWidget*> ChildWidgets;
+			InventoryMenuRef->WidgetTree->GetAllWidgets(ChildWidgets);
+			for (UWidget* ChildWidget : ChildWidgets)
+			{
+				if (UFPSInventoryPanelWidget* InventoryPanel = Cast<UFPSInventoryPanelWidget>(ChildWidget))
+				{
+					InventoryPanelRef = InventoryPanel;
+					break;
+				}
+			}
+		}
+		if (UFPSInventoryPanelWidget* InventoryPanel = InventoryPanelRef.Get())
+		{
+			InventoryPanel->BindMenuHost(InventoryMenuRef);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("AFPSPlayerController: No FPS inventory panel found in InventoryMenuClass."));
+		}
 		InventoryMenuRef->SetVisibility(ESlateVisibility::Collapsed);
 	}
 }
@@ -117,6 +141,10 @@ void AFPSPlayerController::CloseInventory()
 	}
 
 	bInventoryOpen = false;
+	if (UFPSInventoryPanelWidget* InventoryPanel = InventoryPanelRef.Get())
+	{
+		InventoryPanel->CloseDropDownMenu();
+	}
 	InventoryMenuRef->SetVisibility(ESlateVisibility::Collapsed);
 
 	SetShowMouseCursor(false);

@@ -5,6 +5,32 @@
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
 
+void UFPSInventorySlotWidget::NativeConstruct()
+{
+	Super::NativeConstruct();
+	if (SlotButton)
+	{
+		SlotButton->OnReleased.AddUniqueDynamic(this, &UFPSInventorySlotWidget::HandleSlotButtonReleased);
+	}
+}
+
+void UFPSInventorySlotWidget::NativeDestruct()
+{
+	if (SlotButton)
+	{
+		SlotButton->OnReleased.RemoveDynamic(this, &UFPSInventorySlotWidget::HandleSlotButtonReleased);
+	}
+	Super::NativeDestruct();
+}
+
+void UFPSInventorySlotWidget::HandleSlotButtonReleased()
+{
+	if (SlotIndex != INDEX_NONE)
+	{
+		OnSlotReleased.Broadcast(SlotIndex);
+	}
+}
+
 void UFPSInventorySlotWidget::UpdateSlot(UFPSItemDefinition* ItemDefinition, int32 Amount)
 {
 	const bool bHasItem = IsValid(ItemDefinition) && Amount > 0;

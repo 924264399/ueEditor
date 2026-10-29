@@ -2,9 +2,12 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "FPS/FPSInventoryDropDownWidget.h"
 #include "FPSInventoryPanelWidget.generated.h"
 
 class UUniformGridPanel;
+class UCanvasPanel;
+class UButton;
 class UFPSInventoryComponent;
 class UFPSInventorySlotWidget;
 
@@ -15,6 +18,9 @@ class CCSTUDY_API UFPSInventoryPanelWidget : public UUserWidget
 	GENERATED_BODY()
 
 public:
+	/** 外层库存界面持有弹出层时，由控制器在创建界面后调用。 */
+	void BindMenuHost(UUserWidget* MenuHost);
+
 	/** 按库存容量和列数重新生成全部槽位。 */
 	UFUNCTION(BlueprintCallable, Category = "库存", meta = (DisplayName = "重新生成槽位"))
 	void RebuildSlots();
@@ -22,6 +28,12 @@ public:
 	/** 从库存组件读取数据并更新所有槽位。 */
 	UFUNCTION(BlueprintCallable, Category = "库存", meta = (DisplayName = "刷新库存槽位"))
 	void RefreshSlots();
+
+	UFUNCTION(BlueprintCallable, Category = "库存|菜单", meta = (DisplayName = "打开槽位菜单"))
+	void OpenDropDownMenu(int32 SlotIndex);
+
+	UFUNCTION(BlueprintCallable, Category = "库存|菜单", meta = (DisplayName = "关闭槽位菜单"))
+	void CloseDropDownMenu();
 
 protected:
 	virtual void NativeConstruct() override;
@@ -31,6 +43,16 @@ protected:
 	/** 蓝图子类中的统一网格面板必须命名为 InventoryGrid。 */
 	UPROPERTY(meta = (BindWidget, DisplayName = "库存网格面板"))
 	TObjectPtr<UUniformGridPanel> InventoryGrid;
+
+	/** 菜单和背景按钮应直接放在这个全屏 CanvasPanel 下。 */
+	UPROPERTY(meta = (BindWidgetOptional, DisplayName = "库存菜单画布"))
+	TObjectPtr<UCanvasPanel> InventoryCanvas;
+
+	UPROPERTY(meta = (BindWidgetOptional, DisplayName = "槽位操作菜单"))
+	TObjectPtr<UFPSInventoryDropDownWidget> InventoryDropDown;
+
+	UPROPERTY(meta = (BindWidgetOptional, DisplayName = "菜单外区域按钮"))
+	TObjectPtr<UButton> DismissMenuButton;
 
 	/** 单个槽位使用的控件蓝图类。 */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "库存",
@@ -56,6 +78,16 @@ protected:
 	TArray<TObjectPtr<UFPSInventorySlotWidget>> SlotWidgets;
 
 private:
+	UFUNCTION(Category = "库存|菜单", meta = (DisplayName = "处理槽位按钮松开"))
+	void HandleSlotReleased(int32 SlotIndex);
+
+	UFUNCTION(Category = "库存|菜单", meta = (DisplayName = "处理菜单操作"))
+	void HandleMenuAction(EFPSInventoryMenuAction Action);
+
+	UFUNCTION(Category = "库存|菜单", meta = (DisplayName = "处理菜单外点击"))
+	void HandleDismissMenuClicked();
+
 	bool TryBindInventory();
 	TWeakObjectPtr<UFPSInventoryComponent> BoundInventory;
+	int32 ActiveMenuSlotIndex = INDEX_NONE;
 };

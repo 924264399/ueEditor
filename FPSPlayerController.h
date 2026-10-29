@@ -5,6 +5,7 @@
 #include "FPSPlayerController.generated.h"
 
 class UUserWidget;
+class UFPSInventoryPanelWidget;
 class UInputAction;
 struct FInputActionValue;
 
@@ -44,6 +45,7 @@ protected:
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "界面",
 		meta = (DisplayName = "工具菜单控件引用"))
 	TObjectPtr<UUserWidget> InventoryMenuRef;
+	TWeakObjectPtr<UFPSInventoryPanelWidget> InventoryPanelRef;
 
 	// 这个 Input Action 应在蓝图子类的 Class Defaults 中指定，并在输入映射中绑定按键。
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "输入",
