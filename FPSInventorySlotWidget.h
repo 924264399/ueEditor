@@ -10,7 +10,7 @@ class UButton;
 class UTextBlock;
 class UFPSItemDefinition;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnFPSInventorySlotReleased, int32, SlotIndex);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnFPSInventorySlotReleased, int32, SlotIndex);//创建一个委托
 
 /** 显示一个库存槽位的数据，布局由控件蓝图负责。 */
 UCLASS()
@@ -25,7 +25,7 @@ public:
 	void UpdateSlot(UFPSItemDefinition* ItemDefinition, int32 Amount);
 
 	UPROPERTY(BlueprintAssignable, Category = "库存", meta = (DisplayName = "槽位按钮松开时"))
-	FOnFPSInventorySlotReleased OnSlotReleased;
+	FOnFPSInventorySlotReleased OnSlotReleased; //实例化这个委托
 
 protected:
 	virtual void NativeConstruct() override;

@@ -5,12 +5,15 @@
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
 
+
+
+//槽位按钮点击 → 通知库存面板显示  下拉菜单
 void UFPSInventorySlotWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 	if (SlotButton)
 	{
-		SlotButton->OnReleased.AddUniqueDynamic(this, &UFPSInventorySlotWidget::HandleSlotButtonReleased);
+		SlotButton->OnReleased.AddUniqueDynamic(this, &UFPSInventorySlotWidget::HandleSlotButtonReleased);//绑定回调
 	}
 }
 
@@ -27,7 +30,7 @@ void UFPSInventorySlotWidget::HandleSlotButtonReleased()
 {
 	if (SlotIndex != INDEX_NONE)
 	{
-		OnSlotReleased.Broadcast(SlotIndex);
+		OnSlotReleased.Broadcast(SlotIndex); //发出通知。库存面板收到下标后，才去打开并定位下拉菜单
 	}
 }
 

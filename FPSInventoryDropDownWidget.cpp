@@ -36,6 +36,9 @@ void UFPSInventoryDropDownWidget::NativeDestruct()
 	Super::NativeDestruct();
 }
 
+
+
+// 三个按钮  三个功能的回调函数
 void UFPSInventoryDropDownWidget::HandleUseClicked()
 {
 	OnActionSelected.Broadcast(EFPSInventoryMenuAction::Use);

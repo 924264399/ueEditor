@@ -41,6 +41,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "库存", meta = (DisplayName = "添加道具"))
 	bool AddItem(UFPSItemDefinition* ItemDefinition, int32 Amount);
 
+	/** 道具使用成功后，从指定槽位消耗一个。 */
+	UFUNCTION(BlueprintCallable, Category = "库存", meta = (DisplayName = "使用槽位道具"))
+	bool UseItem(int32 SlotIndex);
+
 	UFUNCTION(BlueprintPure, Category = "库存", meta = (DisplayName = "获取库存槽位"))
 	const TArray<FFPSInventorySlot>& GetInventorySlots() const { return InventorySlots; }
 

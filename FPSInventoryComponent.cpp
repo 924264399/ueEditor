@@ -1,5 +1,6 @@
 #include "FPS/FPSInventoryComponent.h"
 
+#include "FPS/FPSCharacter.h"
 #include "FPS/FPSItemDefinition.h"
 
 UFPSInventoryComponent::UFPSInventoryComponent()
@@ -63,6 +64,47 @@ bool UFPSInventoryComponent::AddItem(UFPSItemDefinition* ItemDefinition, int32 A
 		RemainingAmount -= AddedAmount;
 	}
 
+	OnInventoryChanged.Broadcast();
+	return true;
+}
+
+bool UFPSInventoryComponent::UseItem(int32 SlotIndex)
+{
+	if (!InventorySlots.IsValidIndex(SlotIndex))
+	{
+		return false;
+	}
+
+	const FFPSInventorySlot& SelectedSlot = InventorySlots[SlotIndex];
+	UFPSItemDefinition* ItemDefinition = SelectedSlot.ItemDefinition.Get();
+	AFPSCharacter* Character = Cast<AFPSCharacter>(GetOwner());
+	if (SelectedSlot.IsEmpty() || !IsValid(ItemDefinition) || !ItemDefinition->bCanUse || !IsValid(Character))
+	{
+		return false;
+	}
+
+	// 道具拒绝使用时不扣数量。
+	if (!ItemDefinition->Use(Character))
+	{
+		return false;
+	}
+
+	// 使用行为可能改动库存；扣减前重新确认目标槽位。
+	if (!InventorySlots.IsValidIndex(SlotIndex))
+	{
+		return false;
+	}
+	FFPSInventorySlot& SlotAfterUse = InventorySlots[SlotIndex];
+	if (SlotAfterUse.ItemDefinition != ItemDefinition || SlotAfterUse.Amount <= 0)
+	{
+		return false;
+	}
+
+	--SlotAfterUse.Amount;
+	if (SlotAfterUse.Amount == 0)
+	{
+		SlotAfterUse.ItemDefinition = nullptr;
+	}
 	OnInventoryChanged.Broadcast();
 	return true;
 }

@@ -18,7 +18,6 @@ void UFPSInventoryPanelWidget::NativeConstruct()
 	Super::NativeConstruct();
 
 	CloseDropDownMenu();
-	BindMenuHost(this);
 
 	TryBindInventory();
 	//TryBindInventory这个函数：
@@ -39,14 +38,14 @@ void UFPSInventoryPanelWidget::NativeDestruct()
 	}
 	if (DismissMenuButton)
 	{
-		DismissMenuButton->OnClicked.RemoveDynamic(this, &UFPSInventoryPanelWidget::HandleDismissMenuClicked);
+		DismissMenuButton->OnClicked.RemoveDynamic(this, &UFPSInventoryPanelWidget::HandleDismissMenuClicked); //点击去菜单栏的按钮
 	}
 	for (UFPSInventorySlotWidget* SlotWidget : SlotWidgets)
 	{
 		if (SlotWidget)
 		{
 			SlotWidget->OnSlotReleased.RemoveDynamic(this, &UFPSInventoryPanelWidget::HandleSlotReleased);
-		}
+		} //OnSlotReleased是委托 是单个槽位那边创建的 当点击的时候  进行广播  我们这个回应这个委托 并且调用回调函数
 	}
 
 	if (UFPSInventoryComponent* Inventory = BoundInventory.Get())
@@ -245,6 +244,12 @@ void UFPSInventoryPanelWidget::HandleSlotReleased(int32 SlotIndex)
 	OpenDropDownMenu(SlotIndex);
 }
 
+
+
+
+// OpenDropDownMenu函数  确认点的是有道具的槽位
+// → 把菜单放到该槽位旁边
+// → 显示菜单和“点击外侧关闭”的透明按钮
 void UFPSInventoryPanelWidget::OpenDropDownMenu(int32 SlotIndex)
 {
 	const UFPSInventoryComponent* Inventory = BoundInventory.Get();
@@ -289,12 +294,12 @@ void UFPSInventoryPanelWidget::OpenDropDownMenu(int32 SlotIndex)
 	const FVector2D CanvasSize = CanvasGeometry.GetLocalSize();
 	const FVector2D MenuSize = InventoryDropDown->GetDesiredSize();
 	MenuPosition.X = FMath::Clamp(MenuPosition.X, 0.0f, FMath::Max(0.0f, CanvasSize.X - MenuSize.X));
-	MenuPosition.Y = FMath::Clamp(MenuPosition.Y, 0.0f, FMath::Max(0.0f, CanvasSize.Y - MenuSize.Y));
+	MenuPosition.Y = FMath::Clamp(MenuPosition.Y, 0.0f, FMath::Max(0.0f, CanvasSize.Y - MenuSize.Y)); //算位置
 
 	MenuCanvasSlot->SetAnchors(FAnchors(0.0f, 0.0f));
 	MenuCanvasSlot->SetAlignment(FVector2D::ZeroVector);
 	MenuCanvasSlot->SetAutoSize(true);
-	MenuCanvasSlot->SetPosition(MenuPosition);
+	MenuCanvasSlot->SetPosition(MenuPosition); //移动下拉菜单的位置
 }
 
 void UFPSInventoryPanelWidget::CloseDropDownMenu()
@@ -320,9 +325,14 @@ void UFPSInventoryPanelWidget::HandleMenuAction(EFPSInventoryMenuAction Action)
 	const int32 SlotIndex = ActiveMenuSlotIndex;
 	CloseDropDownMenu();
 
-	const UFPSInventoryComponent* Inventory = BoundInventory.Get();
+	UFPSInventoryComponent* Inventory = BoundInventory.Get();
 	if (!Inventory || !Inventory->GetInventorySlots().IsValidIndex(SlotIndex))
 	{
+		return;
+	}
+	if (Action == EFPSInventoryMenuAction::Use)
+	{
+		Inventory->UseItem(SlotIndex);
 		return;
 	}
 	const FFPSInventorySlot& InventorySlot = Inventory->GetInventorySlots()[SlotIndex];
@@ -334,7 +344,6 @@ void UFPSInventoryPanelWidget::HandleMenuAction(EFPSInventoryMenuAction Action)
 	const TCHAR* ActionText = TEXT("未知操作");
 	switch (Action)
 	{
-	case EFPSInventoryMenuAction::Use: ActionText = TEXT("使用"); break;
 	case EFPSInventoryMenuAction::Examine: ActionText = TEXT("检视"); break;
 	case EFPSInventoryMenuAction::Drop: ActionText = TEXT("丢弃"); break;
 	}

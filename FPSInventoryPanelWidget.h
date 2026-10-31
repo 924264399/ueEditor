@@ -18,7 +18,7 @@ class CCSTUDY_API UFPSInventoryPanelWidget : public UUserWidget
 	GENERATED_BODY()
 
 public:
-	/** 外层库存界面持有弹出层时，由控制器在创建界面后调用。 */
+	/** 外层库存界面创建后，绑定它持有的菜单和透明关闭按钮。 */
 	void BindMenuHost(UUserWidget* MenuHost);
 
 	/** 按库存容量和列数重新生成全部槽位。 */
